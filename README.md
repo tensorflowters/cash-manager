@@ -11,7 +11,7 @@ docker-compose -p cash_manager build --no-cache
 ```
 ### 2. Start containers
 ```bash
-$ sudo apt update
+$ docker-compose -p cash_manager up -d
 ```
 <p>&nbsp;</p>
 
