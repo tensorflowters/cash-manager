@@ -1,0 +1,41 @@
+version: '3.9'
+services:
+  db_dev:
+    image: "postgres:latest"
+    environment:
+      - PGDATA=var/lib/postgresql/data/pgdata
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: unless-stopped
+    volumes:
+      - 'pgdata:/var/lib/postgresql/data'
+      - './db/seed.sql:/docker-entrypoint-initdb.d/init.sql'
+
+  admin_dev:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+    restart: unless-stopped
+    ports:
+      - "5555:80"
+    depends_on:
+      - db_dev
+
+  api_dev:
+    build: ./api
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./api:/api
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    depends_on:
+      - db_dev
+
+volumes:
+  pgdata:
