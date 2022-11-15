@@ -26,6 +26,7 @@ services:
 
   api_dev:
     image: ramyferhat59/cashmanager-deploy:api_dev
+    build: ./api
     volumes:
       - ./api:/api
     ports:

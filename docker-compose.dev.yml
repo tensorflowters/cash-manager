@@ -24,8 +24,7 @@ services:
       - db_dev
 
   api_dev:
-    image: ramyferhat59/cashamager:api_dev
-    build: ./api
+    image: ramyferhat59/cashmanager-deploy:api_dev
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./api:/api
