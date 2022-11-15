@@ -37,6 +37,7 @@ class Article(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2)
+    active = models.BooleanField(default=False)
     in_stock_quantity = models.IntegerField(default=0)
     out_stock_quantity = models.IntegerField(default=0)
 
