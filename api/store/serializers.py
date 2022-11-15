@@ -14,11 +14,11 @@ class ProductSerializer(ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'date_created', 'date_updated', 'name', 'description', 'active', 'in_stock_quantity', 'out_stock_quantity', 'category']
+        fields = ['id', 'date_created', 'date_updated', 'name', 'description', 'active', 'category']
 
 
 class ArticleSerializer(ModelSerializer):
 
     class Meta:
         model = Article
-        fields = ['id', 'date_created', 'date_updated', 'name', 'description', 'price', 'product']
+        fields = ['id', 'date_created', 'date_updated', 'name', 'description', 'price', 'product', 'in_stock_quantity', 'out_stock_quantity']
