@@ -17,7 +17,6 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: $PGADMIN_DEFAULT_EMAIL
       PGADMIN_DEFAULT_PASSWORD: $PGADMIN_DEFAULT_PASSWORD    
-    restart: unless-stopped
     ports:
       - "5555:80"
     depends_on:

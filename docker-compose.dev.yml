@@ -7,7 +7,6 @@ services:
       POSTGRES_DB: $POSTGRES_DB 
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD 
-    restart: unless-stopped
     volumes:
       - 'pgdata:/var/lib/postgresql/data'
       - './db/seed.sql:/docker-entrypoint-initdb.d/init.sql'
@@ -17,7 +16,6 @@ services:
     environment: 
       PGADMIN_DEFAULT_EMAIL: $PGADMIN_DEFAULT_EMAIL
       PGADMIN_DEFAULT_PASSWORD: $PGADMIN_DEFAULT_PASSWORD    
-    restart: unless-stopped
     ports:
       - "5555:80"
     depends_on:
