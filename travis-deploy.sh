@@ -9,3 +9,4 @@ sudo docker context create ecs deploy-phoenix --from-env
 sudo docker context use deploy-phoenix
 sudo docker compose -f docker-compose.dev.yml up
 echo "test"
+echo "test"
