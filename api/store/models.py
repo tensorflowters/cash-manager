@@ -22,8 +22,6 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     active = models.BooleanField(default=False)
-    in_stock_quantity = models.IntegerField(default=0)
-    out_stock_quantity = models.IntegerField(default=0)
 
     category = models.ForeignKey('store.Category', on_delete=models.CASCADE, related_name='products')
 
@@ -39,6 +37,9 @@ class Article(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2)
+    active = models.BooleanField(default=False)
+    in_stock_quantity = models.IntegerField(default=0)
+    out_stock_quantity = models.IntegerField(default=0)
 
     product = models.ForeignKey('store.Product', on_delete=models.CASCADE, related_name='articles')
 

@@ -29,6 +29,6 @@ docker-compose exec api_dev python manage.py createsuperuser
 pg_dump -U <db_username> <db_name> -h <host> -t <table_name> > seed.sql
 Host can be found with docker inspect <the_container_id> of the database
 ```bash
-docker-compose exec db_dev pg_dump -U postgres postgres -h 172.22.0.2 > seed.sql
+docker-compose exec db_dev pg_dump -U postgres postgres -h 172.27.0.2 > seed.sql
 ```
 

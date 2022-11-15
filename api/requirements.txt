@@ -1,3 +1,4 @@
 Django==4.1
 djangorestframework==3.14.0
+djangorestframework-simplejwt==4.7.2
 psycopg2
