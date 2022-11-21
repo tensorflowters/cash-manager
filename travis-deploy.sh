@@ -11,3 +11,4 @@ sudo docker compose -f docker-compose.dev.yml up
 echo "test"
 echo "test"
 echo "test"
+echo "test"
