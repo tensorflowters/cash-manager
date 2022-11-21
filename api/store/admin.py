@@ -4,7 +4,7 @@ from store.models import Category, Product, Article
 
 class CategoryAdmin(admin.ModelAdmin):
 
-    list_display = ('name', 'active', 'description', 'url' 'date_created', 'date_updated')
+    list_display = ('name', 'active', 'description', 'url', 'date_created', 'date_updated')
 
 
 class ProductAdmin(admin.ModelAdmin):
