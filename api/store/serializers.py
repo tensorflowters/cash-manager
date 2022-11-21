@@ -16,7 +16,7 @@ class CategoryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'active', 'description']
+        fields = ['id', 'name', 'active', 'description', 'url']
 
     def validate_name(self, value):
         if Category.objects.filter(name=value).exists():
@@ -30,7 +30,7 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['id', 'date_created', 'date_updated', 'name','active', 'description', 'products']
+        fields = ['id', 'date_created', 'date_updated', 'name','active', 'description', 'products', 'url'] 
 
     def get_products(self, instance):
         queryset = instance.products.filter(active=True)
@@ -42,7 +42,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'active', 'category']
+        fields = ['id', 'name', 'description', 'active', 'category', 'url']
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
@@ -51,7 +51,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'date_created', 'date_updated', 'name', 'description', 'active', 'category']
+        fields = ['id', 'date_created', 'date_updated', 'name', 'description', 'active', 'category', 'url']
 
     def get_articles(self, instance):
         queryset = instance.articles.filter(active=True)
@@ -63,7 +63,7 @@ class ArticleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Article
-        fields = ['id', 'date_created', 'date_updated', 'name', 'description', 'price', 'product', 'in_stock_quantity', 'out_stock_quantity']
+        fields = ['id', 'date_created', 'date_updated', 'name', 'description', 'price', 'product', 'in_stock_quantity', 'out_stock_quantity', 'url']
 
     def validate_price(self, value):
         if value <= 0:
