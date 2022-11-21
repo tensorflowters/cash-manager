@@ -5,11 +5,10 @@ class Category(models.Model):
 
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     active = models.BooleanField(default=False)
-
+    url = models.CharField(max_length=1000)
     def __str__(self):
         return self.name
 
@@ -18,11 +17,10 @@ class Product(models.Model):
 
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     active = models.BooleanField(default=False)
-
+    url = models.CharField(max_length=1000)
     category = models.ForeignKey('store.Category', on_delete=models.CASCADE, related_name='products')
 
     def __str__(self):
@@ -33,14 +31,13 @@ class Article(models.Model):
 
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2)
     active = models.BooleanField(default=False)
     in_stock_quantity = models.IntegerField(default=0)
     out_stock_quantity = models.IntegerField(default=0)
-
+    url = models.CharField(max_length=1000)
     product = models.ForeignKey('store.Product', on_delete=models.CASCADE, related_name='articles')
 
     def __str__(self):
