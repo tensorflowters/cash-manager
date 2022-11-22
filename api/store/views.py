@@ -1,13 +1,14 @@
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
+from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework import mixins
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-
 from store.permissions import IsAdminAuthenticated, IsStaffAuthenticated
+from django.contrib.auth.models import User
 from store.models import Category, Product, Article
 from store.serializers import CategoryDetailSerializer, CategoryListSerializer,\
-    ProductDetailSerializer, ProductSerializer, ArticleSerializer
+    ProductDetailSerializer, ProductSerializer, ArticleSerializer, UserSerializer, UserDetailSerializer
 
 
 class MultipleSerializerMixin:
@@ -16,20 +17,42 @@ class MultipleSerializerMixin:
 
     @method_decorator(csrf_exempt)
     def get_serializer_class(self):
-        if self.action == 'retrieve' and self.detail_serializer_class is not None:
+        if (self.action == 'retrieve' or self.action == 'update' or self.action == 'partial_update' or self.action == 'destroy') and self.detail_serializer_class is not None:
             return self.detail_serializer_class
         return super().get_serializer_class()
 
 
-class AdminCategoryViewset(MultipleSerializerMixin, ModelViewSet):
+class UserViewset(ModelViewSet):
+
+    serializer_class = UserDetailSerializer
+    queryset = User.objects.all()
+    # permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
+
+
+class CreateListRetrieveViewSet(mixins.CreateModelMixin,
+                                mixins.ListModelMixin,
+                                mixins.RetrieveModelMixin,
+                                GenericViewSet):
+
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
+
+class CategoryViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = CategoryListSerializer
     detail_serializer_class = CategoryDetailSerializer
     queryset = Category.objects.all()
     # permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
 
+    @method_decorator(csrf_exempt)
+    @action(detail=True, methods=['post'])
+    def disable(self, request, pk):
+        self.get_object().disable()
+        return Response()
 
-class CategoryViewset(MultipleSerializerMixin, ReadOnlyModelViewSet):
+
+class ReadOnlyCategoryViewset(MultipleSerializerMixin, ReadOnlyModelViewSet):
 
     serializer_class = CategoryListSerializer
     detail_serializer_class = CategoryDetailSerializer
@@ -38,14 +61,8 @@ class CategoryViewset(MultipleSerializerMixin, ReadOnlyModelViewSet):
     def get_queryset(self):
         return Category.objects.filter(active=True)
 
-    @method_decorator(csrf_exempt)
-    @action(detail=True, methods=['post'])
-    def disable(self, request, pk):
-        self.get_object().disable()
-        return Response()
 
-
-class ProductViewset(MultipleSerializerMixin, ReadOnlyModelViewSet):
+class ReadOnlyProductViewset(MultipleSerializerMixin, ReadOnlyModelViewSet):
 
     serializer_class = ProductSerializer
     detail_serializer_class = ProductDetailSerializer
@@ -53,7 +70,19 @@ class ProductViewset(MultipleSerializerMixin, ReadOnlyModelViewSet):
     @method_decorator(csrf_exempt)
     def get_queryset(self):
         queryset = Product.objects.filter(active=True)
-        category_id = self.request.GET.get('category_id')
+        category_id = self.request.query_params.get('category_id')
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+        return queryset
+
+
+class ProductViewset(ModelViewSet):
+    serializer_class = ProductSerializer
+    queryset = Product.objects.all()
+
+    @method_decorator(csrf_exempt)
+    def get_queryset(self):
+        category_id = self.request.query_params.get('category_id')
         if category_id:
             queryset = queryset.filter(category_id=category_id)
         return queryset
@@ -62,15 +91,11 @@ class ProductViewset(MultipleSerializerMixin, ReadOnlyModelViewSet):
     @action(detail=True, methods=['post'])
     def disable(self, request, pk):
         self.get_object().disable()
-        return Response()
+        queryset = Product.objects.get(pk=pk)
+        return Response(queryset)
 
 
-class AdminProductViewset(ModelViewSet):
-    serializer_class = ProductSerializer
-    queryset = Product.objects.all()
-
-
-class ArticleViewset(ReadOnlyModelViewSet):
+class ReadOnlyArticleViewset(ReadOnlyModelViewSet):
 
     serializer_class = ArticleSerializer
 
@@ -83,6 +108,6 @@ class ArticleViewset(ReadOnlyModelViewSet):
         return queryset
 
 
-class AdminArticleViewset(ModelViewSet):
+class ArticleViewset(ModelViewSet):
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
