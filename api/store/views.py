@@ -1,3 +1,4 @@
+from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
 from rest_framework.response import Response
 from rest_framework import status
@@ -5,11 +6,16 @@ from rest_framework.decorators import action
 from rest_framework import mixins
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
 from store.permissions import IsAdminAuthenticated, IsStaffAuthenticated
 from django.contrib.auth.models import User
 from store.models import Category, Product, Article
 from store.serializers import CategoryDetailSerializer, CategoryListSerializer,\
     ProductDetailSerializer, ProductSerializer, ArticleSerializer, UserSerializer, UserDetailSerializer
+import os
+import stripe
+
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 
 class MultipleSerializerMixin:
@@ -31,17 +37,18 @@ class UserViewset(ModelViewSet):
 
 
 class CreateListRetrieveViewSetUser(mixins.CreateModelMixin,
-                                mixins.ListModelMixin,
-                                mixins.RetrieveModelMixin,
-                                GenericViewSet):
+                                    mixins.ListModelMixin,
+                                    mixins.RetrieveModelMixin,
+                                    GenericViewSet):
 
     serializer_class = UserSerializer
     queryset = User.objects.all()
-    
+
     def create(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            user = User.objects.create_user(serializer.data.get('username'), serializer.data.get('email'), serializer.data.get('password'))
+            user = User.objects.create_user(serializer.data.get(
+                'username'), serializer.data.get('email'), serializer.data.get('password'))
             user.first_name = serializer.data.get('first_name')
             user.last_name = serializer.data.get('last_name')
             user.save()
@@ -122,3 +129,37 @@ class ReadOnlyArticleViewset(ReadOnlyModelViewSet):
 class ArticleViewset(ModelViewSet):
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
+
+
+class StripeView(APIView):
+    def get(self, request, format=None):
+        config = {"stripe_pk": os.environ.get('STRIPE_SECRET_KEY')}
+        return Response(config)
+
+
+class StripeSessionView(APIView):
+    def get(self, request, format=None):
+        body = JSONParser().parse(request)
+        return Response(body)
+        # pay_data = {
+        # "price_data": {
+        # "currency": "usd",
+        # "unit_amount": body['product_price'],
+        #  "product_data": {
+        #     "name": body['product_name'],
+        #    "images": body['product_image'],
+        #  }
+        # },
+        #  "quantity": 1,
+    # }
+
+        # checkout_session = stripe.checkout.Session.create(
+        # success_url="",
+        # cancel_url="",
+        # payment_method_types=['card'],
+        # mode='payment',
+        # line_items=[
+        #    pay_data,
+        # ]
+       #  )
+        # return Response({'sessionId': checkout_session['id']})
