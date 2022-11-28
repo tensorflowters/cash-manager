@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 docker login --username $DOCKER_HUB_USER --password $DOCKER_HUB_PASS

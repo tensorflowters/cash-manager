@@ -1,15 +1,21 @@
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
+from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import mixins
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser 
 from store.permissions import IsAdminAuthenticated, IsStaffAuthenticated
 from django.contrib.auth.models import User
 from store.models import Category, Product, Article
 from store.serializers import CategoryDetailSerializer, CategoryListSerializer,\
     ProductDetailSerializer, ProductSerializer, ArticleSerializer, UserSerializer, UserDetailSerializer
 
+import os
+import stripe
+
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY') 
 
 class MultipleSerializerMixin:
 
@@ -111,3 +117,35 @@ class ReadOnlyArticleViewset(ReadOnlyModelViewSet):
 class ArticleViewset(ModelViewSet):
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
+
+class StripeView(APIView):
+    def get(self, request, format=None):
+        config = { "stripe_pk": os.environ.get('STRIPE_SECRET_KEY') }
+        return Response(config)
+
+class StripeSessionView(APIView):
+    def get(self, request, format=None):
+        body = JSONParser().parse(request) 
+        return Response(body)
+        # pay_data = {
+            # "price_data": {
+                # "currency": "usd",
+                # "unit_amount": body['product_price'],
+               #  "product_data": {
+                #     "name": body['product_name'],
+                 #    "images": body['product_image'],
+               #  }
+            # },
+           #  "quantity": 1,
+    #}
+
+        # checkout_session = stripe.checkout.Session.create(
+        # success_url="",
+        # cancel_url="",
+        # payment_method_types=['card'],
+        # mode='payment',
+        # line_items=[
+         #    pay_data,
+        # ]
+       #  )
+        # return Response({'sessionId': checkout_session['id']})
