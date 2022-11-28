@@ -1,5 +1,6 @@
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework import mixins
 from django.utils.decorators import method_decorator
@@ -29,13 +30,23 @@ class UserViewset(ModelViewSet):
     # permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
 
 
-class CreateListRetrieveViewSet(mixins.CreateModelMixin,
+class CreateListRetrieveViewSetUser(mixins.CreateModelMixin,
                                 mixins.ListModelMixin,
                                 mixins.RetrieveModelMixin,
                                 GenericViewSet):
 
     serializer_class = UserSerializer
     queryset = User.objects.all()
+    
+    def create(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.create_user(serializer.data.get('username'), serializer.data.get('email'), serializer.data.get('password'))
+            user.first_name = serializer.data.get('first_name')
+            user.last_name = serializer.data.get('last_name')
+            user.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryViewset(MultipleSerializerMixin, ModelViewSet):
