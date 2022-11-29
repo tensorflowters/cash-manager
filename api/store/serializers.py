@@ -15,6 +15,22 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Username already exists')
         return value
 
+class UserAuthSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=False)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    email = serializers.CharField(required=False)
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name',
+                  'email']
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError('Username already exists')
+        return value
+
 
 class UserDetailSerializer(serializers.ModelSerializer):
 

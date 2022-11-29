@@ -5,7 +5,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from store.views import ReadOnlyCategoryViewset
 from store.views import ReadOnlyProductViewset
 from store.views import ReadOnlyArticleViewset
-from store.views import CreateListRetrieveViewSetUser
+from store.views import PublicUserViewset
+from store.views import AuthenticatedUserViewset
 from store.views import ProductViewset
 from store.views import CategoryViewset
 from store.views import ArticleViewset
@@ -18,7 +19,9 @@ router.register('api/categories', ReadOnlyCategoryViewset,
                 basename='categories')
 router.register('api/products', ReadOnlyProductViewset, basename='products')
 router.register('api/articles', ReadOnlyArticleViewset, basename='articles')
-router.register('api/users', CreateListRetrieveViewSetUser, basename='users')
+router.register('api/users', PublicUserViewset, basename='users')
+
+router.register('api/authenticated/users', AuthenticatedUserViewset, basename='authenticated-users')
 
 router.register('api/admin/categories', CategoryViewset,
                 basename='admin-category')
