@@ -21,7 +21,8 @@ router.register('api/products', ReadOnlyProductViewset, basename='products')
 router.register('api/articles', ReadOnlyArticleViewset, basename='articles')
 router.register('api/users', PublicUserViewset, basename='users')
 
-router.register('api/authenticated/users', AuthenticatedUserViewset, basename='authenticated-users')
+router.register('api/authenticated/users',
+                AuthenticatedUserViewset, basename='authenticated-users')
 
 router.register('api/admin/categories', CategoryViewset,
                 basename='admin-category')
