@@ -61,3 +61,23 @@ class Article(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Cart(models.Model):
+
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name="carts")
+    
+    def __str__(self):
+        return self.name
+
+
+class CartArticle(models.Model):
+
+    article = models.ForeignKey(
+        'store.Article', on_delete=models.CASCADE, related_name='cart_articles')
+
+    cart = models.ForeignKey(
+        'store.Cart', on_delete=models.CASCADE, related_name='cart_articles')
+    
+    def __str__(self):
+        return self.name

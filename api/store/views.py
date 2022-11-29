@@ -6,10 +6,10 @@ from rest_framework.parsers import JSONParser
 from rest_framework import status
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated
-from store.models import Category, Product, Article
+from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
+from store.models import Category, Product, Article, Cart, CartArticle
 from store.serializers import CategoryDetailSerializer, CategoryListSerializer,\
-    ProductDetailSerializer, ProductSerializer, ArticleSerializer, ArticleDetailSerializer
+    ProductDetailSerializer, ProductSerializer, ArticleSerializer, ArticleDetailSerializer, CartSerializer, CartArticleSerializer
 import os
 import stripe
 
@@ -107,6 +107,25 @@ class ArticleViewset(ModelViewSet):
         product_id = self.request.query_params.get('product_id')
         if product_id is not None:
             queryset = queryset.filter(product_id=product_id)
+        return queryset
+
+
+class CartViewset(ModelViewSet):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+    permission_classes = [IsUserAuthenticated]
+
+
+
+class CartArticleViewset(ModelViewSet):
+    serializer_class = CartArticleSerializer
+    permission_classes = [IsUserAuthenticated]
+
+    @method_decorator(csrf_exempt)
+    def get_queryset(self):
+        # article_id = self.request.data.get('article_id')
+        # queryset = CartArticle.objects.filter(article=article_id)
+        queryset = CartArticle.objects.all()
         return queryset
 
 

@@ -11,6 +11,8 @@ from store.views import ReadOnlyArticleViewset
 from store.views import ProductViewset
 from store.views import CategoryViewset
 from store.views import ArticleViewset
+from store.views import CartViewset
+from store.views import CartArticleViewset
 from store.views import StripeView
 from store.views import StripeSessionView
 
@@ -28,6 +30,9 @@ router.register('api/categories', ReadOnlyCategoryViewset,
                 basename='categories')
 router.register('api/products', ReadOnlyProductViewset, basename='products')
 router.register('api/articles', ReadOnlyArticleViewset, basename='articles')
+
+router.register('api/authenticated/carts', CartViewset, basename='carts')
+router.register('api/authenticated/cart-articles', CartArticleViewset, basename='cart-articles')
 
 router.register('api/admin/categories', CategoryViewset,
                 basename='admin-category')

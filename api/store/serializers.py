@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from store.models import Category, Product, Article
+from store.models import Category, Product, Article, Cart, CartArticle
+from django.contrib.auth.models import User
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -82,3 +83,21 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
         if Category.objects.filter(name=value).exists():
             raise serializers.ValidationError('Category already exists')
         return value
+
+
+class CartSerializer(serializers.ModelSerializer):
+
+    user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user']
+
+class CartArticleSerializer(serializers.ModelSerializer):
+
+    cart = serializers.SlugRelatedField(queryset=Cart.objects.all(), slug_field='id')
+    article = ArticleSerializer(read_only=True)
+
+    class Meta:
+        model = CartArticle
+        fields = ['id', 'cart', 'article']
