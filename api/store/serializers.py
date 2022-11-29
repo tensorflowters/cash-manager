@@ -1,49 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
 from store.models import Category, Product, Article
-
-
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'password', 'first_name', 'last_name',
-                  'email']
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError('Username already exists')
-        return value
-
-class UserAuthSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=False)
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
-    email = serializers.CharField(required=False)
-
-    class Meta:
-        model = User
-        fields = ['username', 'first_name', 'last_name',
-                  'email']
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError('Username already exists')
-        return value
-
-
-class UserDetailSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'password', 'first_name', 'last_name',
-                  'email', 'is_staff', 'is_active', 'last_login', 'is_superuser']
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError('Username already exists')
-        return value
-
 
 class ArticleSerializer(serializers.ModelSerializer):
 

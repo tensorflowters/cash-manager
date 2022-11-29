@@ -1,18 +1,14 @@
 from rest_framework.views import APIView
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
+from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework import mixins
+from rest_framework.parsers import JSONParser
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.parsers import JSONParser
-from store.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
-from django.contrib.auth.models import User
+from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated
 from store.models import Category, Product, Article
 from store.serializers import CategoryDetailSerializer, CategoryListSerializer,\
-    ProductDetailSerializer, ProductSerializer, ArticleSerializer, UserSerializer, UserDetailSerializer, UserAuthSerializer
+    ProductDetailSerializer, ProductSerializer, ArticleSerializer
 import os
 import stripe
 
@@ -28,80 +24,6 @@ class MultipleSerializerMixin:
         if (self.action == 'retrieve' or self.action == 'update' or self.action == 'partial_update' or self.action == 'destroy') and self.detail_serializer_class is not None:
             return self.detail_serializer_class
         return super().get_serializer_class()
-
-
-class UserViewset(ModelViewSet):
-
-    serializer_class = UserDetailSerializer
-    queryset = User.objects.all()
-    permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
-
-
-class PublicUserViewset(mixins.CreateModelMixin,
-                        mixins.ListModelMixin,
-                        mixins.RetrieveModelMixin,
-                        GenericViewSet):
-
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-
-    def create(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = User.objects.create_user(serializer.data.get(
-                'username'), serializer.data.get('email'), serializer.data.get('password'))
-            user.first_name = serializer.data.get('first_name')
-            user.last_name = serializer.data.get('last_name')
-            user.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
-
-    serializer_class = UserAuthSerializer
-    permission_classes = [IsUserAuthenticated]
-
-    @method_decorator(csrf_exempt)
-    def get_queryset(self):
-        authenticated_id = self.request.user
-        queryset = User.objects.filter(username=authenticated_id)
-        return queryset
-
-    def update(self, request, pk):
-        user = User.objects.get(pk=pk)
-        serializer = UserAuthSerializer(user, data=request.data)
-
-        if serializer.is_valid():
-            if self.request.data.get("password") == None:
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-            else:
-                return Response({'password': ["You should use the appropriate url to edit user's password"]}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def partial_update(self, request, pk):
-        user = User.objects.get(pk=pk)
-        serializer = UserAuthSerializer(user, data=request.data)
-
-        if serializer.is_valid():
-            if self.request.data.get("password") == None:
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-            else:
-                return Response({'password': ["You should use the appropriate url to edit user's password"]}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @method_decorator(csrf_exempt)
-    @action(detail=True, methods=['patch'])
-    def set_password(self, request, pk):
-        try:
-            user = User.objects.get(pk=pk)
-            user.set_password(request.data.get('password'))
-            user.save()
-            return Response({'password': ["Password successfully updated"]}, status=status.HTTP_202_ACCEPTED)
-        except ObjectDoesNotExist:
-            return Response('User does not exists', status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryViewset(MultipleSerializerMixin, ModelViewSet):
