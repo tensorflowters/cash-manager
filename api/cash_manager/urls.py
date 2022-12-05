@@ -12,6 +12,10 @@ from store.views import ArticleViewset
 from store.views import UserViewset
 from store.views import StripeView
 from store.views import StripeSessionView
+from store.views import TestStripeView
+from store.views import FailureView
+from store.views import SuccessView
+from store.views import LandingView
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register('api/categories', ReadOnlyCategoryViewset,
@@ -26,7 +30,6 @@ router.register('api/admin/products', ProductViewset,
                 basename='admin-products')
 router.register('api/admin/articles', ArticleViewset, basename='admin-article')
 router.register('api/admin/users', UserViewset, basename='admin-users')
-# router.register('admin/stripe_pk', AdminStripeViewset, basename='admin-stripe')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,5 +38,9 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('stripe-pk/', StripeView.as_view(), name='stripe'),
     path('stripe-session/', StripeSessionView.as_view(), name='stripe-session'),
+    path('test-stripe/', TestStripeView.as_view(), name='test-stripe'),
+    path('cancel/', FailureView.as_view(), name='cancel'),
+    path('success/', SuccessView.as_view(), name='success'),
+    path('landing/', LandingView.as_view(), name='landing'),
     path('', include(router.urls))
 ]
