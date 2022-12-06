@@ -26,7 +26,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = ['id', 'date_created', 'date_updated', 'name', 'description',
-                  'price', 'product', 'in_stock_quantity', 'out_stock_quantity', 'url']
+                  'price', 'product', 'stripe_price_id', 'stripe_product_id', 'in_stock_quantity', 'out_stock_quantity', 'url']
 
     def validate_price(self, value):
         if value <= 0:

@@ -15,6 +15,10 @@ from store.views import CartViewset
 from store.views import CartArticleViewset
 from store.views import StripeView
 from store.views import StripeSessionView
+from store.views import TestStripeView
+# from store.views import FailureView
+# from store.views import SuccessView
+# from store.views import LandingView
 
 router = routers.DefaultRouter(trailing_slash=False)
 
@@ -49,5 +53,9 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('stripe-pk/', StripeView.as_view(), name='stripe'),
     path('stripe-session/', StripeSessionView.as_view(), name='stripe-session'),
+    path('test-stripe/', TestStripeView.as_view(), name='test-stripe'),
+    # path('cancel/', FailureView.as_view(), name='cancel'),
+    # path('success/', SuccessView.as_view(), name='success'),
+    # path('landing/', LandingView.as_view(), name='landing'),
     path('', include(router.urls))
 ]
