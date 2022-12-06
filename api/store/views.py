@@ -15,9 +15,8 @@ from store.serializers import CategoryDetailSerializer, CategoryListSerializer,\
     ProductDetailSerializer, ProductSerializer, ArticleSerializer, UserSerializer, UserDetailSerializer, UserAuthSerializer
 import os
 import stripe
-
+import json 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
-
 
 class MultipleSerializerMixin:
 
@@ -180,36 +179,61 @@ class ArticleViewset(ModelViewSet):
     queryset = Article.objects.all()
     permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
 
-
+class TestStripeView(APIView):
+    def post(self, request):
+        try:
+            test_payment_intent = stripe.PaymentIntent.create(
+                amount=1000, currency='pln', 
+                payment_method_types=['card'],
+                receipt_email='test@example.com')
+            return Response(test_payment_intent)
+        except Exception as e:
+          return Response({"error": e.user_message})
+          pass
+        
 class StripeView(APIView):
-    def get(self, request, format=None):
+    def get(self, request):
         config = {"stripe_pk": os.environ.get('STRIPE_SECRET_KEY')}
         return Response(config)
 
-
 class StripeSessionView(APIView):
-    def get(self, request, format=None):
-        body = JSONParser().parse(request)
-        return Response(body)
-        # pay_data = {
-        # "price_data": {
-        # "currency": "usd",
-        # "unit_amount": body['product_price'],
-        #  "product_data": {
-        #     "name": body['product_name'],
-        #    "images": body['product_image'],
-        #  }
-        # },
-        #  "quantity": 1,
-    # }
+    def post(self, request):
+        article = Article.objects.get(name='Test Product')
+        serializer_class = ArticleSerializer(article)
+        pay_data = {
+            "price": serializer_class.data['stripe_price_id'],     
+            "quantity": 1,
+        }
+        checkout_session = stripe.checkout.Session.create(
+                success_url="http://0.0.0.0:8000/success",
+                cancel_url="http://0.0.0.0:8000/cancel",
+                payment_method_types=['card'],
+                mode='payment',
+                line_items=[
+                    pay_data,
+                ]
+        )
+        return redirect(checkout_session.url)
 
-        # checkout_session = stripe.checkout.Session.create(
-        # success_url="",
-        # cancel_url="",
-        # payment_method_types=['card'],
-        # mode='payment',
-        # line_items=[
-        #    pay_data,
-        # ]
-       #  )
-        # return Response({'sessionId': checkout_session['id']})
+class SuccessView(APIView):
+    renderer_classes = (TemplateHTMLRenderer,)
+
+    def get(self, request):
+        return Response(template_name='success.html')
+
+
+class FailureView(APIView):
+    renderer_classes = (TemplateHTMLRenderer,)
+
+    def get(self, request):
+        return Response(template_name='failure.html')
+
+class LandingView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+
+    def get(self, request):
+        article = Article.objects.get(name="Test Product")
+        serializer_class = ArticleSerializer(article)
+        print(serializer_class.data['stripe_price_id'])
+        return Response({'article': article }, template_name='landing.html')
+

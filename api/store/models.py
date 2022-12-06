@@ -44,6 +44,8 @@ class Article(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2)
+    stripe_price_id =  models.CharField(max_length=1000, default="")
+    stripe_product_id = models.CharField(max_length=1000,  default="")
     active = models.BooleanField(default=False)
     in_stock_quantity = models.IntegerField(default=0)
     out_stock_quantity = models.IntegerField(default=0)
@@ -53,3 +55,6 @@ class Article(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_price(self):
+        return self.price
