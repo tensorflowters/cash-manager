@@ -65,7 +65,7 @@ class Article(models.Model):
 
 class Cart(models.Model):
 
-    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name="carts")
+    user = models.ForeignKey('authentication.User', on_delete=models.CASCADE, related_name="carts")
     
     def __str__(self):
         return self.name

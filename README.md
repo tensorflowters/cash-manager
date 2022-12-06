@@ -22,6 +22,9 @@ You need to create a superuser in order to access the django admin page
 ```bash
 docker-compose -f docker-compose.local.yml -p cash_manager exec api_dev python manage.py createsuperuser
 ```
+```bash
+docker-compose -f docker-compose.local.yml -p cash_manager exec api_dev python manage.py changepassword superadmin
+```
 <p>&nbsp;</p>
 
 ### 4. Exporting data from database for the next seed

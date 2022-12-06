@@ -6,29 +6,23 @@ from rest_framework.decorators import action
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from authentication.models import User
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
-from authentication.serializers import UserDetailSerializer, UserDetailSerializerPATCH, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH
+from authentication.serializers import UserDetailSerializer, UserDetailSerializerPATCH, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH, RegistrationSerializer
 
 
-class PublicUserViewset(mixins.CreateModelMixin,
-                        GenericViewSet):
+class PublicUserViewset(mixins.CreateModelMixin, GenericViewSet):
 
-    serializer_class = UserSerializer
     queryset = User.objects.all()
 
     def create(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
             if User.objects.filter(email=request.data.get('email')).exists():
                 return Response({'email': ['Account with this email already exists']}, status=status.HTTP_400_BAD_REQUEST)
-            user = User.objects.create_user(serializer.data.get(
-                'username'), serializer.data.get('email'), serializer.data.get('password'))
-            user.first_name = serializer.data.get('first_name')
-            user.last_name = serializer.data.get('last_name')
-            user.save()
-            new_user = UserSerializer(user)
-            return Response(new_user.data, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

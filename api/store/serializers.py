@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from store.models import Category, Product, Article, Cart, CartArticle
-from django.contrib.auth.models import User
+from authentication.models import User
 
 
 class ArticleSerializer(serializers.ModelSerializer):
