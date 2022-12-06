@@ -1,51 +1,27 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from store.models import Category, Product, Article
-
-
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'password', 'first_name', 'last_name',
-                  'email']
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError('Username already exists')
-        return value
-
-class UserAuthSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=False)
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
-    email = serializers.CharField(required=False)
-
-    class Meta:
-        model = User
-        fields = ['username', 'first_name', 'last_name',
-                  'email']
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError('Username already exists')
-        return value
-
-
-class UserDetailSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'password', 'first_name', 'last_name',
-                  'email', 'is_staff', 'is_active', 'last_login', 'is_superuser']
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError('Username already exists')
-        return value
+from store.models import Category, Product, Article, Cart, CartArticle
+from authentication.models import User
 
 
 class ArticleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Article
+        fields = ['id', 'name', 'description', 'price',
+                  'product', 'in_stock_quantity', 'url']
+
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Price must be greater than 0')
+        return value
+
+    def validate_product(self, value):
+        if value.active is False:
+            raise serializers.ValidationError('Inactive product')
+        return value
+
+
+class ArticleDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Article
@@ -69,13 +45,12 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description',
-                  'active', 'category', 'url', 'articles']
+        fields = ['id', 'name', 'description', 'category', 'url', 'articles']
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
 
-    articles = ArticleSerializer(many=True, read_only=True)
+    articles = ArticleDetailSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -87,7 +62,7 @@ class CategoryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'active', 'description', 'url']
+        fields = ['id', 'name', 'description', 'url']
 
     def validate_name(self, value):
         if Category.objects.filter(name=value).exists():
@@ -103,3 +78,26 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'date_created', 'date_updated',
                   'name', 'active', 'description', 'url', 'products']
+
+    def validate_name(self, value):
+        if Category.objects.filter(name=value).exists():
+            raise serializers.ValidationError('Category already exists')
+        return value
+
+
+class CartSerializer(serializers.ModelSerializer):
+
+    user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user']
+
+class CartArticleSerializer(serializers.ModelSerializer):
+
+    cart = serializers.SlugRelatedField(queryset=Cart.objects.all(), slug_field='id')
+    article = ArticleSerializer(read_only=True)
+
+    class Meta:
+        model = CartArticle
+        fields = ['id', 'cart', 'article']

@@ -36,6 +36,14 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    @transaction.atomic
+    def disable(self):
+        if self.active is False:
+            return
+        self.active = False
+        self.save()
+        self.articles.update(active=False)
+
 
 class Article(models.Model):
 
@@ -58,3 +66,23 @@ class Article(models.Model):
 
     def get_price(self):
         return self.price
+
+
+class Cart(models.Model):
+
+    user = models.ForeignKey('authentication.User', on_delete=models.CASCADE, related_name="carts")
+    
+    def __str__(self):
+        return self.name
+
+
+class CartArticle(models.Model):
+
+    article = models.ForeignKey(
+        'store.Article', on_delete=models.CASCADE, related_name='cart_articles')
+
+    cart = models.ForeignKey(
+        'store.Cart', on_delete=models.CASCADE, related_name='cart_articles')
+    
+    def __str__(self):
+        return self.name

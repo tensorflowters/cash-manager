@@ -8,6 +8,7 @@ class IsAdminAuthenticated(BasePermission):
                     and request.user.is_authenticated
                     and request.user.is_superuser)
 
+
 class IsUserAuthenticated(BasePermission):
 
     def has_permission(self, request, view):
