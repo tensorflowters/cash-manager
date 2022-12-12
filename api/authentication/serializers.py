@@ -21,6 +21,26 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
+class LoginSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['username', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+
+class RefreshResponseSerializer(serializers.Serializer):
+    access = serializers.CharField()
+
+    def create(self, validated_data):
+        raise NotImplementedError()
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError()
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

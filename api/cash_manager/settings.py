@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_yasg',
     'rest_framework_simplejwt',
     'store',
     'authentication'
@@ -117,6 +118,19 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
+
 AUTH_PROFILE_MODULE = 'authentication.User'
 
+
 AUTH_USER_MODEL = 'authentication.User'
+
+
+SWAGGER_SETTINGS =  {
+    'SECURITY_DEFINITIONS': {
+        'basic': {
+            'type': 'basic'
+        }
+    },
+    'TAGS_SORTER ': 'alpha',
+    'APIS_SORTER': None,
+}
