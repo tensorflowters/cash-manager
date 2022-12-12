@@ -116,3 +116,20 @@ class UserDetailSerializerPATCH(serializers.ModelSerializer):
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError('Username already exists')
         return value
+
+class UserLoginResponseSerializer(serializers.Serializer):
+
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(required=False)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    email = serializers.CharField(required=False)
+    is_staff = serializers.CharField(required=False)
+    is_active = serializers.CharField(required=False)
+    last_login = serializers.CharField(required=False)
+    is_superuser = serializers.CharField(required=False)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name',
+                  'email', 'is_staff', 'is_active', 'last_login', 'is_superuser']

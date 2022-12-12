@@ -8,11 +8,12 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate, login, logout
+from django.core import serializers
 from drf_yasg.utils import swagger_auto_schema
 from authentication.utils import get_tokens_for_user
 from authentication.models import User
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
-from authentication.serializers import UserDetailSerializer, UserDetailSerializerPATCH, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH, RegistrationSerializer, LoginSerializer, RefreshResponseSerializer
+from authentication.serializers import UserDetailSerializer, UserDetailSerializerPATCH, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH, RegistrationSerializer, LoginSerializer, RefreshResponseSerializer, UserLoginResponseSerializer
 
 
 class RegisterViewset(mixins.CreateModelMixin, GenericViewSet):
@@ -25,7 +26,7 @@ class RegisterViewset(mixins.CreateModelMixin, GenericViewSet):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
             if User.objects.filter(email=request.data.get('email')).exists():
-                return Response({'email': ['Account with this email already exists']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'email': 'Account with this email already exists'}, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -39,15 +40,16 @@ class LoginViewset(mixins.CreateModelMixin, GenericViewSet):
     @swagger_auto_schema(tags=["Authentication"])
     def create(self, request):
         if 'username' not in request.data or 'password' not in request.data:
-            return Response({'message': ['Credentials missing']}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'Credentials missing'}, status=status.HTTP_400_BAD_REQUEST)
         username = request.data.get('username')
         password = request.data.get('password')
         user = authenticate(request, username=username, password=password)
+        serialized_user = UserLoginResponseSerializer(user)
         if user is not None:
             login(request, user)
             auth_data = get_tokens_for_user(request.user)
-            return Response({'message': ['Login Success'], **auth_data}, status=status.HTTP_200_OK)
-        return Response({'error': ['Invalid Credentials']}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'message': 'Login Success', 'user': serialized_user.data, **auth_data}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class LogoutViewset(mixins.CreateModelMixin, GenericViewSet):
@@ -58,7 +60,7 @@ class LogoutViewset(mixins.CreateModelMixin, GenericViewSet):
     @swagger_auto_schema(tags=["Authentication"])
     def create(self, request):
         logout(request)
-        return Response({'message': ['Successfully Logged out']}, status=status.HTTP_200_OK)
+        return Response({'message': 'Successfully Logged out'}, status=status.HTTP_200_OK)
 
 
 class RefreshView(TokenRefreshView):
@@ -89,7 +91,7 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
             else:
-                return Response({'password': ["You should use the appropriate url to edit user's password"]}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'password': "You should use the appropriate url to edit user's password"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(tags=["Authenticated users"])
@@ -102,7 +104,7 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
             else:
-                return Response({'password': ["You should use the appropriate url to edit user's password"]}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'password': "You should use the appropriate url to edit user's password"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(tags=["Authenticated users"])
@@ -113,7 +115,7 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
             user = User.objects.get(pk=pk)
             user.set_password(request.data.get('password'))
             user.save()
-            return Response({'password': ["Password successfully updated"]}, status=status.HTTP_202_ACCEPTED)
+            return Response({'password': "Password successfully updated"}, status=status.HTTP_202_ACCEPTED)
         except ObjectDoesNotExist:
             return Response('User does not exists', status=status.HTTP_400_BAD_REQUEST)
 
