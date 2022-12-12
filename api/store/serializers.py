@@ -93,6 +93,7 @@ class CartSerializer(serializers.ModelSerializer):
         model = Cart
         fields = ['id', 'user']
 
+
 class CartArticleSerializer(serializers.ModelSerializer):
 
     cart = serializers.SlugRelatedField(queryset=Cart.objects.all(), slug_field='id')

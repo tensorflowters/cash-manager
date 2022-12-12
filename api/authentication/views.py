@@ -3,19 +3,24 @@ from rest_framework import mixins
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework_simplejwt.views import TokenRefreshView
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate, login, logout
+from drf_yasg.utils import swagger_auto_schema
+from authentication.utils import get_tokens_for_user
 from authentication.models import User
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
-from authentication.serializers import UserDetailSerializer, UserDetailSerializerPATCH, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH, RegistrationSerializer
+from authentication.serializers import UserDetailSerializer, UserDetailSerializerPATCH, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH, RegistrationSerializer, LoginSerializer, RefreshResponseSerializer
 
 
-class PublicUserViewset(mixins.CreateModelMixin, GenericViewSet):
+class RegisterViewset(mixins.CreateModelMixin, GenericViewSet):
 
+    serializer_class = RegistrationSerializer
     queryset = User.objects.all()
 
+    @swagger_auto_schema(tags=["Authentication"])
     def create(self, request):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -24,6 +29,43 @@ class PublicUserViewset(mixins.CreateModelMixin, GenericViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginViewset(mixins.CreateModelMixin, GenericViewSet):
+
+    serializer_class = LoginSerializer
+    queryset = User.objects.all()
+
+    @swagger_auto_schema(tags=["Authentication"])
+    def create(self, request):
+        if 'username' not in request.data or 'password' not in request.data:
+            return Response({'message': ['Credentials missing']}, status=status.HTTP_400_BAD_REQUEST)
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            auth_data = get_tokens_for_user(request.user)
+            return Response({'message': ['Login Success'], **auth_data}, status=status.HTTP_200_OK)
+        return Response({'error': ['Invalid Credentials']}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class LogoutViewset(mixins.CreateModelMixin, GenericViewSet):
+
+    serializer_class = LoginSerializer
+    queryset = User.objects.all()
+
+    @swagger_auto_schema(tags=["Authentication"])
+    def create(self, request):
+        logout(request)
+        return Response({'message': ['Successfully Logged out']}, status=status.HTTP_200_OK)
+
+
+class RefreshView(TokenRefreshView):
+
+    @swagger_auto_schema(responses={status.HTTP_200_OK: RefreshResponseSerializer}, tags=["Authentication"])
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
@@ -37,6 +79,7 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
         queryset = User.objects.filter(username=authenticated_id)
         return queryset
 
+    @swagger_auto_schema(tags=["Authenticated users"])
     def update(self, request, pk):
         user = User.objects.get(pk=pk)
         serializer = UserAuthSerializer(user, data=request.data)
@@ -49,6 +92,7 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
                 return Response({'password': ["You should use the appropriate url to edit user's password"]}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=["Authenticated users"])
     def partial_update(self, request, pk):
         user = User.objects.get(pk=pk)
         serializer = UserAuthSerializerPATCH(user, data=request.data)
@@ -61,6 +105,7 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
                 return Response({'password': ["You should use the appropriate url to edit user's password"]}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=["Authenticated users"])
     @method_decorator(csrf_exempt)
     @action(detail=True, methods=['patch'])
     def set_password(self, request, pk):
@@ -73,12 +118,16 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
             return Response('User does not exists', status=status.HTTP_400_BAD_REQUEST)
 
 
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Admin users"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Admin users"]))
+@method_decorator(name="destroy", decorator=swagger_auto_schema(tags=["Admin users"]))
 class AdminUserViewset(ModelViewSet):
 
     serializer_class = UserDetailSerializer
     queryset = User.objects.all()
     permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
 
+    @swagger_auto_schema(tags=["Admin users"])
     def create(self, request):
         serializer = UserDetailSerializer(data=request.data)
         if serializer.is_valid():
@@ -93,6 +142,7 @@ class AdminUserViewset(ModelViewSet):
             return Response(new_user.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=["Admin users"])
     def update(self, request, pk):
         user = User.objects.get(pk=pk)
         serializer = UserDetailSerializer(user, data=request.data)
@@ -105,6 +155,7 @@ class AdminUserViewset(ModelViewSet):
                 return Response({'password': ["You should use the appropriate url to edit user's password"]}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=["Admin users"])
     def partial_update(self, request, pk):
         user = User.objects.get(pk=pk)
         serializer = UserDetailSerializerPATCH(user, data=request.data)
@@ -117,6 +168,7 @@ class AdminUserViewset(ModelViewSet):
                 return Response({'password': ["You should use the appropriate url to edit user's password"]}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=["Admin users"])
     @method_decorator(csrf_exempt)
     @action(detail=True, methods=['patch'])
     def set_password(self, request, pk):
@@ -130,3 +182,4 @@ class AdminUserViewset(ModelViewSet):
             return Response({'password': ['Please provide a no empty password']}, status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist:
             return Response('User does not exists', status=status.HTTP_400_BAD_REQUEST)
+    

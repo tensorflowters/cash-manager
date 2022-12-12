@@ -2,19 +2,21 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.parsers import JSONParser
 from rest_framework import status
+from drf_yasg.utils import swagger_auto_schema
+from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-# from django.template.backends.django import TemplateHTMLRenderer
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
 from store.models import Category, Product, Article, Cart, CartArticle
 from store.serializers import CategoryDetailSerializer, CategoryListSerializer,\
     ProductDetailSerializer, ProductSerializer, ArticleSerializer, ArticleDetailSerializer, CartSerializer, CartArticleSerializer
 import os
 import stripe
-import json 
+
+
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+
 
 class MultipleSerializerMixin:
 
@@ -27,6 +29,8 @@ class MultipleSerializerMixin:
         return super().get_serializer_class()
 
 
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Public categories"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Public categories"]))
 class ReadOnlyCategoryViewset(ReadOnlyModelViewSet):
 
     serializer_class = CategoryListSerializer
@@ -36,6 +40,12 @@ class ReadOnlyCategoryViewset(ReadOnlyModelViewSet):
         return Category.objects.filter(active=True)
 
 
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Admin categories"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Admin categories"]))
+@method_decorator(name="create", decorator=swagger_auto_schema(tags=["Admin categories"]))
+@method_decorator(name="update", decorator=swagger_auto_schema(tags=["Admin categories"]))
+@method_decorator(name="partial_update", decorator=swagger_auto_schema(tags=["Admin categories"]))
+@method_decorator(name="destroy", decorator=swagger_auto_schema(tags=["Admin categories"]))
 class CategoryViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = CategoryListSerializer
@@ -43,6 +53,7 @@ class CategoryViewset(MultipleSerializerMixin, ModelViewSet):
     queryset = Category.objects.all()
     permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
 
+    @swagger_auto_schema(tags=["Admin categories"])
     @method_decorator(csrf_exempt)
     @action(detail=True, methods=['post'])
     def disable(self, request, pk):
@@ -50,6 +61,8 @@ class CategoryViewset(MultipleSerializerMixin, ModelViewSet):
         return Response()
 
 
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Public products"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Public products"]))
 class ReadOnlyProductViewset(ReadOnlyModelViewSet):
 
     serializer_class = ProductSerializer
@@ -63,7 +76,14 @@ class ReadOnlyProductViewset(ReadOnlyModelViewSet):
         return queryset
 
 
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Admin products"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Admin products"]))
+@method_decorator(name="create", decorator=swagger_auto_schema(tags=["Admin products"]))
+@method_decorator(name="update", decorator=swagger_auto_schema(tags=["Admin products"]))
+@method_decorator(name="partial_update", decorator=swagger_auto_schema(tags=["Admin products"]))
+@method_decorator(name="destroy", decorator=swagger_auto_schema(tags=["Admin products"]))
 class ProductViewset(ModelViewSet):
+
     serializer_class = ProductDetailSerializer
     permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
 
@@ -75,6 +95,7 @@ class ProductViewset(ModelViewSet):
             queryset = queryset.filter(category_id=category_id)
         return queryset
 
+    @swagger_auto_schema(tags=["Admin products"])
     @method_decorator(csrf_exempt)
     @action(detail=True, methods=['post'])
     def disable(self, request, pk):
@@ -84,6 +105,8 @@ class ProductViewset(ModelViewSet):
         return Response(products.data, status=status.HTTP_202_ACCEPTED)
 
 
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Public articles"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Public articles"]))
 class ReadOnlyArticleViewset(ReadOnlyModelViewSet):
 
     serializer_class = ArticleSerializer
@@ -97,7 +120,14 @@ class ReadOnlyArticleViewset(ReadOnlyModelViewSet):
         return queryset
 
 
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Admin articles"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Admin articles"]))
+@method_decorator(name="create", decorator=swagger_auto_schema(tags=["Admin articles"]))
+@method_decorator(name="update", decorator=swagger_auto_schema(tags=["Admin articles"]))
+@method_decorator(name="partial_update", decorator=swagger_auto_schema(tags=["Admin articles"]))
+@method_decorator(name="destroy", decorator=swagger_auto_schema(tags=["Admin articles"]))
 class ArticleViewset(ModelViewSet):
+
     serializer_class = ArticleDetailSerializer
     permission_classes = [IsAdminAuthenticated, IsStaffAuthenticated]
 
@@ -110,26 +140,39 @@ class ArticleViewset(ModelViewSet):
         return queryset
 
 
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Authenticated carts"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Authenticated carts"]))
+@method_decorator(name="create", decorator=swagger_auto_schema(tags=["Authenticated carts"]))
+@method_decorator(name="update", decorator=swagger_auto_schema(tags=["Authenticated carts"]))
+@method_decorator(name="partial_update", decorator=swagger_auto_schema(tags=["Authenticated carts"]))
+@method_decorator(name="destroy", decorator=swagger_auto_schema(tags=["Authenticated carts"]))
 class CartViewset(ModelViewSet):
+
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
     permission_classes = [IsUserAuthenticated]
 
 
-
+@method_decorator(name="list", decorator=swagger_auto_schema(tags=["Authenticated cart articles"]))
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(tags=["Authenticated cart articles"]))
+@method_decorator(name="create", decorator=swagger_auto_schema(tags=["Authenticated cart articles"]))
+@method_decorator(name="update", decorator=swagger_auto_schema(tags=["Authenticated cart articles"]))
+@method_decorator(name="partial_update", decorator=swagger_auto_schema(tags=["Authenticated cart articles"]))
+@method_decorator(name="destroy", decorator=swagger_auto_schema(tags=["Authenticated cart articles"]))
 class CartArticleViewset(ModelViewSet):
+
     serializer_class = CartArticleSerializer
     permission_classes = [IsUserAuthenticated]
 
     @method_decorator(csrf_exempt)
     def get_queryset(self):
-        # article_id = self.request.data.get('article_id')
-        # queryset = CartArticle.objects.filter(article=article_id)
         queryset = CartArticle.objects.all()
         return queryset
 
 
 class TestStripeView(APIView):
+
+    @swagger_auto_schema(tags=["Stripe"])
     def post(self, request):
         try:
             test_payment_intent = stripe.PaymentIntent.create(
@@ -140,13 +183,19 @@ class TestStripeView(APIView):
         except Exception as e:
           return Response({"error": e.user_message})
           pass
-        
+
+
 class StripeView(APIView):
+
+    @swagger_auto_schema(tags=["Stripe"])
     def get(self, request):
         config = {"stripe_pk": os.environ.get('STRIPE_SECRET_KEY')}
         return Response(config)
 
+
 class StripeSessionView(APIView):
+
+    @swagger_auto_schema(tags=["Stripe"])
     def post(self, request):
         article = Article.objects.get(name='Test Product')
         serializer_class = ArticleSerializer(article)
@@ -164,26 +213,3 @@ class StripeSessionView(APIView):
                 ]
         )
         return redirect(checkout_session.url)
-
-# class SuccessView(APIView):
-#     renderer_classes = (TemplateHTMLRenderer,)
-
-#     def get(self, request):
-#         return Response(template_name='success.html')
-
-
-# class FailureView(APIView):
-#     renderer_classes = (TemplateHTMLRenderer,)
-
-#     def get(self, request):
-#         return Response(template_name='failure.html')
-
-# class LandingView(APIView):
-#     renderer_classes = [TemplateHTMLRenderer]
-
-#     def get(self, request):
-#         article = Article.objects.get(name="Test Product")
-#         serializer_class = ArticleSerializer(article)
-#         print(serializer_class.data['stripe_price_id'])
-#         return Response({'article': article }, template_name='landing.html')
-
