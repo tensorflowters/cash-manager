@@ -131,6 +131,6 @@ SWAGGER_SETTINGS =  {
             'type': 'basic'
         }
     },
-    'TAGS_SORTER ': 'alpha',
+    'TAGS_SORTER': 'alpha',
     'APIS_SORTER': None,
 }
