@@ -165,11 +165,12 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 			cart_id = queryset.values().get().get('id')
 			card_articles = CartArticle.objects.filter(cart=cart_id)
 			serializer = self.serializer_class(queryset.get())
-			articles = CartArticleSerializer(card_articles.all()).data
-			print(card_articles)
-			print(articles)
-			# print(json.dumps(articles))
-			return Response(serializer.data, status=status.HTTP_200_OK)
+			articles = []
+			for ca in card_articles:
+				articles.append(CartArticleSerializer(ca).data.get("article"))
+			cart = serializer.data
+			cart["articles"] = articles
+			return Response(cart, status=status.HTTP_200_OK)
 		else:
 			return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
