@@ -16,7 +16,6 @@ from store.views import ProductViewset
 from store.views import CategoryViewset
 from store.views import ArticleViewset
 from store.views import CartViewset
-from store.views import CartArticleViewset
 from store.views import StripeView
 from store.views import StripeSessionView
 from store.views import TestStripeView
@@ -56,7 +55,6 @@ router.register('api/articles', ReadOnlyArticleViewset, basename='articles')
 
 # User authenticated routes for store ressources
 router.register('api/authenticated/cart', CartViewset, basename='carts')
-router.register('api/authenticated/cart-articles', CartArticleViewset, basename='cart-articles')
 
 # Admin routes for any store ressources actions
 router.register('api/admin/categories', CategoryViewset,
