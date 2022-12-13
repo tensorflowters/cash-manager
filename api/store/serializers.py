@@ -88,7 +88,8 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(read_only=True)
-    user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
+    user = serializers.SlugRelatedField(
+        queryset=User.objects.all(), slug_field='username')
 
     class Meta:
         model = Cart
@@ -96,11 +97,13 @@ class CartSerializer(serializers.Serializer):
 
 
 class CartArticleSerializer(serializers.Serializer):
-    
+
     id = serializers.IntegerField(read_only=True)
-    cart = serializers.SlugRelatedField(queryset=Cart.objects.all(), slug_field='id')
+    cart = serializers.SlugRelatedField(
+        queryset=Cart.objects.all(), slug_field='id')
     article = ArticleSerializer(read_only=True)
+    quantity = serializers.IntegerField(default=1)
 
     class Meta:
         model = CartArticle
-        fields = ['id', 'cart', 'article']
+        fields = ['id', 'cart', 'quantity', 'article']

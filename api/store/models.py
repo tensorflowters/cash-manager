@@ -52,7 +52,7 @@ class Article(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=10)
-    stripe_price_id =  models.CharField(max_length=1000, default="")
+    stripe_price_id = models.CharField(max_length=1000, default="")
     stripe_product_id = models.CharField(max_length=1000,  default="")
     active = models.BooleanField(default=False)
     in_stock_quantity = models.IntegerField(default=0)
@@ -70,8 +70,9 @@ class Article(models.Model):
 
 class Cart(models.Model):
 
-    user = models.ForeignKey('authentication.User', on_delete=models.CASCADE, related_name="carts")
-    
+    user = models.ForeignKey('authentication.User',
+                             on_delete=models.CASCADE, related_name="carts")
+
     def __repr__(self):
         return f'Cart(id={self.id}, user={self.user})'
 
@@ -83,6 +84,8 @@ class CartArticle(models.Model):
 
     cart = models.ForeignKey(
         'store.Cart', on_delete=models.CASCADE, related_name='cart_articles')
-    
+
+    quantity = models.IntegerField(default=1)
+
     def __repr__(self):
-        return f'CartArticle(id={self.id}, article={self.article}, cart={self.cart})'
+        return f'CartArticle(id={self.id}, article={self.article}, cart={self.cart}, quantity={self.quantity})'
