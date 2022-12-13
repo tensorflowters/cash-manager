@@ -55,7 +55,7 @@ router.register('api/products', ReadOnlyProductViewset, basename='products')
 router.register('api/articles', ReadOnlyArticleViewset, basename='articles')
 
 # User authenticated routes for store ressources
-router.register('api/authenticated/carts', CartViewset, basename='carts')
+router.register('api/authenticated/cart', CartViewset, basename='carts')
 router.register('api/authenticated/cart-articles', CartArticleViewset, basename='cart-articles')
 
 # Admin routes for any store ressources actions

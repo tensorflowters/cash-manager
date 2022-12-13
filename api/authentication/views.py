@@ -8,13 +8,12 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate, login, logout
-from django.core import serializers
 from drf_yasg.utils import swagger_auto_schema
 from authentication.utils import get_tokens_for_user
 from authentication.models import User
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
 from authentication.serializers import UserDetailSerializer, UserDetailSerializerPATCH, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH, RegistrationSerializer, LoginSerializer, RefreshResponseSerializer, UserLoginResponseSerializer
-
+from store.models import Cart
 
 class RegisterViewset(mixins.CreateModelMixin, GenericViewSet):
 
@@ -28,7 +27,13 @@ class RegisterViewset(mixins.CreateModelMixin, GenericViewSet):
             if User.objects.filter(email=request.data.get('email')).exists():
                 return Response({'email': 'Account with this email already exists'}, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            user = self.queryset.filter(username=serializer.data.get("username"))
+            user_data = user.values('id', 'username', 'first_name', 'last_name',
+                  'email', 'is_staff', 'is_active', 'last_login', 'is_superuser').get()
+            user_id = user_data.get("id")
+            cart = Cart.objects.create(user=User.objects.get(pk=user_id))
+            cart.save()
+            return Response(user_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -184,4 +189,3 @@ class AdminUserViewset(ModelViewSet):
             return Response({'password': ['Please provide a no empty password']}, status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist:
             return Response('User does not exists', status=status.HTTP_400_BAD_REQUEST)
-    

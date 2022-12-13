@@ -5,42 +5,42 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
 class Manager(BaseUserManager):
-    def create_user(self, username, email, password=None):
-        """
-        Creates and saves a User with the given email, date of
-        birth and password.
-        """
-        if not username:
-            raise ValueError('Users must have an username')
+	def create_user(self, username, email, password=None):
+		"""
+		Creates and saves a User with the given email, date of
+		birth and password.
+		"""
+		if not username:
+			raise ValueError('Users must have an username')
 
-        if not email:
-            raise ValueError('Users must have an email address')
+		if not email:
+			raise ValueError('Users must have an email address')
 
-        if not password:
-            raise ValueError('Users must have a password')
+		if not password:
+			raise ValueError('Users must have a password')
 
-        user = self.model(
-            username=self.username,
-            email=self.normalize_email(email),
-        )
+		user = self.model(
+			username=self.username,
+			email=self.normalize_email(email),
+		)
 
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
+		user.set_password(password)
+		user.save(using=self._db)
+		return user
 
-    def create_superuser(self, username, email, password):
-        """
-        Creates and saves a superuser with the given email, date of
-        birth and password.
-        """
-        user = self.create_user(
-            username,
-            password=password,
-            email=email,
-        )
-        user.is_admin = True
-        user.save(using=self._db)
-        return user
+	def create_superuser(self, username, email, password):
+		"""
+		Creates and saves a superuser with the given email, date of
+		birth and password.
+		"""
+		user = self.create_user(
+			username,
+			password=password,
+			email=email,
+		)
+		user.is_admin = True
+		user.save(using=self._db)
+		return user
 
 
 class User(AbstractBaseUser):
@@ -64,12 +64,5 @@ class User(AbstractBaseUser):
 		def __str__(self):
 				return self.username
 
-		def has_perm(self, perm, obj=None):
-				"Does the user have a specific permission?"
-				# Simplest possible answer: Yes, always
-				return True
-
-		def has_module_perms(self, app_label):
-				"Does the user have permissions to view the app `app_label`?"
-				# Simplest possible answer: Yes, always
-				return True
+		def get_user(self):
+			return str(self)

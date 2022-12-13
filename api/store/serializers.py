@@ -85,8 +85,9 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
         return value
 
 
-class CartSerializer(serializers.ModelSerializer):
+class CartSerializer(serializers.Serializer):
 
+    id = serializers.IntegerField(read_only=True)
     user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
 
     class Meta:
@@ -94,8 +95,9 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ['id', 'user']
 
 
-class CartArticleSerializer(serializers.ModelSerializer):
-
+class CartArticleSerializer(serializers.Serializer):
+    
+    id = serializers.IntegerField(read_only=True)
     cart = serializers.SlugRelatedField(queryset=Cart.objects.all(), slug_field='id')
     article = ArticleSerializer(read_only=True)
 
