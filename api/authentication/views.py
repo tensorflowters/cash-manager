@@ -75,54 +75,74 @@ class RefreshView(TokenRefreshView):
         return super().post(request, *args, **kwargs)
 
 
-class AuthenticatedUserViewset(mixins.UpdateModelMixin, GenericViewSet):
+class AuthenticatedUserViewset(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
 
     serializer_class = UserAuthSerializer
     permission_classes = [IsUserAuthenticated]
 
     @method_decorator(csrf_exempt)
     def get_queryset(self):
-        authenticated_id = self.request.user
-        queryset = User.objects.filter(username=authenticated_id)
+        authenticated_user = self.request.user
+        queryset = User.objects.filter(username=authenticated_user)
         return queryset
 
     @swagger_auto_schema(tags=["Authenticated users"])
-    def update(self, request, pk):
-        user = User.objects.get(pk=pk)
-        serializer = UserAuthSerializer(user, data=request.data)
+    def retrieve(self, request, pk):
+        try:
+            user = self.get_queryset().get(pk=pk)
+            serializer = UserDetailSerializer(user)
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except ObjectDoesNotExist:
+            return Response({ 'message': 'User does not exists or you have not the rights to access it'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if serializer.is_valid():
-            if self.request.data.get("password") == None:
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-            else:
-                return Response({'password': "You should use the appropriate url to edit user's password"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @swagger_auto_schema(tags=["Authenticated users"])
+    def update(self, request, pk):
+        try:
+            user = self.get_queryset().get(pk=pk)
+            serializer = UserAuthSerializer(user, data=request.data)
+
+            if serializer.is_valid():
+                if self.request.data.get("password") == None:
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+                else:
+                    return Response({'password': "You should use the appropriate url to edit user's password"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except ObjectDoesNotExist:
+            return Response({ 'message': 'User does not exists or you have not the rights to access it'}, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(tags=["Authenticated users"])
     def partial_update(self, request, pk):
-        user = User.objects.get(pk=pk)
-        serializer = UserAuthSerializerPATCH(user, data=request.data)
 
-        if serializer.is_valid():
-            if self.request.data.get("password") == None:
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-            else:
-                return Response({'password': "You should use the appropriate url to edit user's password"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = self.get_queryset().get(pk=pk)
+            serializer = UserAuthSerializerPATCH(user, data=request.data)
+            
+            if serializer.is_valid():
+                if self.request.data.get("password") == None:
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+                else:
+                    return Response({'password': "You should use the appropriate url to edit user's password"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except ObjectDoesNotExist:
+            return Response({ 'message': 'User does not exists or you have not the rights to access it'}, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(tags=["Authenticated users"])
     @method_decorator(csrf_exempt)
     @action(detail=True, methods=['patch'])
     def set_password(self, request, pk):
         try:
-            user = User.objects.get(pk=pk)
+            user = self.get_queryset().get(pk=pk)
             user.set_password(request.data.get('password'))
             user.save()
             return Response({'password': "Password successfully updated"}, status=status.HTTP_202_ACCEPTED)
         except ObjectDoesNotExist:
-            return Response('User does not exists', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ 'message': 'User does not exists or you have not the rights to access it'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @method_decorator(name="list", decorator=swagger_auto_schema(tags=["Admin users"]))
