@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from authentication.models import User
 
 
@@ -49,8 +48,8 @@ class UserAuthSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = ['id', 'username', 'email', 'first_name', 'last_name']
-		read_only_fields = ['is_staff', 'is_active', 'last_login', 'is_superuser']
+		fields = ['username', 'email', 'first_name', 'last_name']
+		read_only_fields = ['id', 'is_staff', 'is_active', 'last_login', 'is_superuser']
 
 	def check_username_exists(self, username, new_username):
 		if User.objects.exclude(username=username).filter(username=new_username).exists():
@@ -97,13 +96,36 @@ class PasswordAuthSerializer(serializers.ModelSerializer):
 		fields = ['password']
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class UserDetailSerializerPOST(serializers.ModelSerializer):
 	password = serializers.CharField(min_length=8, max_length=255, allow_blank=False)
+
+	class Meta:
+		model = User
+		fields = ['id', 'username', 'email', 'password', 'first_name',
+				  'last_name', 'is_staff', 'is_active', 'last_login', 'is_superuser']
+
+	def save(self):
+		user = User(username=self.validated_data['username'], email=self.validated_data['email'])
+		password = self.validated_data['password']
+		user.set_password(password)
+		user.first_name = self.validated_data.get('first_name', '')
+		user.last_name = self.validated_data.get('last_name', '')
+		user.is_staff = self.validated_data.get('is_staff', False)
+		user.is_active = self.validated_data.get('is_active', True)
+		user.last_login = self.validated_data.get('last_login', None)
+		user.is_superuser = self.validated_data.get('is_superuser', False)
+		user.save()
+		return User.get_obj(user)
+
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
 		fields = ['id', 'username', 'email', 'first_name',
 				  'last_name', 'is_staff', 'is_active', 'last_login', 'is_superuser']
+
 
 	def check_username_exists(self, username, new_username):
 		if User.objects.exclude(username=username).filter(username=new_username).exists():
@@ -117,8 +139,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
 		else:
 			return False
 
-class UserDetailSerializerPATCH(serializers.ModelSerializer):
 
+class UserDetailSerializerPATCH(serializers.ModelSerializer):
+	id = serializers.IntegerField(read_only=True)
 	username = serializers.CharField(required=False)
 	first_name = serializers.CharField(required=False)
 	last_name = serializers.CharField(required=False)
@@ -132,3 +155,15 @@ class UserDetailSerializerPATCH(serializers.ModelSerializer):
 		model = User
 		fields = ['id', 'username', 'first_name', 'last_name',
 				  'email', 'is_staff', 'is_active', 'last_login', 'is_superuser']
+
+	def check_username_exists(self, username, new_username):
+		if User.objects.exclude(username=username).filter(username=new_username).exists():
+			return True
+		else:
+			return False
+
+	def check_email_exists(self, email, new_email):
+		if User.objects.exclude(email=email).filter(email=new_email).exists():
+			return True
+		else:
+			return False
