@@ -13,7 +13,7 @@ docker-compose -f docker-compose.local.yml -p cash_manager build --no-cache
 
 ### 2. Start containers
 ```bash
-$ docker-compose -f docker-compose.local.yml -p cash_manager up -d
+docker-compose -f docker-compose.local.yml -p cash_manager up -d
 ```
 <p>&nbsp;</p>
 
