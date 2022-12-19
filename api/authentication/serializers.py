@@ -75,15 +75,47 @@ class UserAuthSerializerPATCH(serializers.ModelSerializer):
 		model = User
 		fields = ['id', 'username', 'first_name', 'last_name',
 				  'email']
+		
+	def check_username_exists(self, username, new_username):
+		if User.objects.exclude(username=username).filter(username=new_username).exists():
+			return True
+		else:
+			return False
+
+	def check_email_exists(self, email, new_email):
+		if User.objects.exclude(email=email).filter(email=new_email).exists():
+			return True
+		else:
+			return False
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class PasswordAuthSerializer(serializers.ModelSerializer):
+	password = serializers.CharField(min_length=8, max_length=255, allow_blank=False, required=True)
 
 	class Meta:
 		model = User
-		fields = ['id', 'username', 'first_name', 'last_name',
-				  'email', 'is_staff', 'is_active', 'last_login', 'is_superuser']
+		fields = ['password']
 
+
+class UserDetailSerializer(serializers.ModelSerializer):
+	password = serializers.CharField(min_length=8, max_length=255, allow_blank=False)
+
+	class Meta:
+		model = User
+		fields = ['id', 'username', 'email', 'first_name',
+				  'last_name', 'is_staff', 'is_active', 'last_login', 'is_superuser']
+
+	def check_username_exists(self, username, new_username):
+		if User.objects.exclude(username=username).filter(username=new_username).exists():
+			return True
+		else:
+			return False
+
+	def check_email_exists(self, email, new_email):
+		if User.objects.exclude(email=email).filter(email=new_email).exists():
+			return True
+		else:
+			return False
 
 class UserDetailSerializerPATCH(serializers.ModelSerializer):
 

@@ -13,7 +13,7 @@ from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from authentication.models import User
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
 from authentication.serializers import UserDetailSerializer, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH, \
-									   RegistrationSerializer, LoginSerializer, RefreshResponseSerializer
+									   RegistrationSerializer, LoginSerializer, RefreshResponseSerializer, PasswordAuthSerializer
 from authentication.utils import get_tokens_for_user
 from store.models import Cart
 
@@ -129,21 +129,45 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, mixins.RetrieveModelMixi
 
 	@swagger_auto_schema(tags=["Authenticated users"])
 	def partial_update(self, request, pk):
-
 		try:
 			user = self.get_queryset().get(pk=pk)
 			serializer = UserAuthSerializerPATCH(user, data=request.data)
 			
-			if serializer.is_valid():
-				if self.request.data.get("password") == None:
-					serializer.save()
-					return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+			if serializer.is_valid(raise_exception=True):
+				if self.request.data.get("password") != None:
+					raise ParseError('password: This field is read-only and cannot be edited.', code='validation_error')
+				elif self.request.data.get("is_superuser") != None:
+					raise ParseError('is_superuser: This field is read-only and cannot be edited.', code='validation_error')
+				elif self.request.data.get("is_staff") != None:
+					raise ParseError('is_staff: This field is read-only and cannot be edited.', code='validation_error')
+				elif self.request.data.get("is_active") != None:
+					raise ParseError('is_active: This field is read-only and cannot be edited.', code='validation_error')
+				elif self.request.data.get("last_login") != None:
+					raise ParseError('last_login: This field is read-only and cannot be edited.', code='validation_error')
 				else:
-					return Response({'password': "You should use the appropriate url to edit user's password"}, status=status.HTTP_400_BAD_REQUEST)
-			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+					if request.data.get('username') != None:
+						username_exists = serializer.check_username_exists(User.get_obj(user)['username'], request.data['username'])
+						if username_exists:
+							raise ValidationError('Username already exists', code="validation_error")
+						else:
+							serializer.save()
+							return Response(serializer.data, status=status.HTTP_200_OK)
+					elif request.data.get('email') != None:
+						email_exists = serializer.check_email_exists(User.get_obj(user)['email'], request.data['email'])
+						if email_exists:
+							raise ValidationError('Email already exists', code="validation_error")
+						else:
+							serializer.save()
+							return Response(serializer.data, status=status.HTTP_200_OK)
+					else:
+						serializer.save()
+						return Response(serializer.data, status=status.HTTP_200_OK)
+			else:
+				raise ValidationError(serializer.errors, code="validation_error")
 		
 		except ObjectDoesNotExist:
-			return Response({ 'message': 'User does not exists or you have not the rights to access it'}, status=status.HTTP_400_BAD_REQUEST)
+			raise NotFound
+
 
 	@swagger_auto_schema(tags=["Authenticated users"])
 	@method_decorator(csrf_exempt)
@@ -151,11 +175,18 @@ class AuthenticatedUserViewset(mixins.UpdateModelMixin, mixins.RetrieveModelMixi
 	def set_password(self, request, pk):
 		try:
 			user = self.get_queryset().get(pk=pk)
-			user.set_password(request.data.get('password'))
-			user.save()
-			return Response({'password': "Password successfully updated"}, status=status.HTTP_202_ACCEPTED)
+			if request.user.is_authenticated:
+				serializer = PasswordAuthSerializer(data=request.data)
+				if serializer.is_valid():
+					user.set_password(request.data.get('password'))
+					user.save()
+					return Response({ "password": "This field was successfully updated"}, status=status.HTTP_202_ACCEPTED)
+				else:
+					raise ValidationError(serializer.errors, code="validation_error")
+			else:
+				raise NotAuthenticated("Authentication credentials were not provided.", code="not_authenticated")
 		except ObjectDoesNotExist:
-			return Response({ 'message': 'User does not exists or you have not the rights to access it'}, status=status.HTTP_400_BAD_REQUEST)
+			raise NotFound
 
 
 @method_decorator(name="list", decorator=swagger_auto_schema(tags=["Admin users"]))
@@ -171,16 +202,23 @@ class AdminUserViewset(ModelViewSet):
 	def create(self, request):
 		serializer = UserDetailSerializer(data=request.data)
 		if serializer.is_valid():
-			if User.objects.filter(email=request.data.get('email')).exists():
-				return Response({'email': ['Account with this email already exists']}, status=status.HTTP_400_BAD_REQUEST)
-			user = User.objects.create_user(serializer.data.get(
-				'username'), serializer.data.get('email'), serializer.data.get('password'))
-			user.first_name = serializer.data.get('first_name')
-			user.last_name = serializer.data.get('last_name')
-			user.save()
-			new_user = UserSerializer(user)
-			return Response(new_user.data, status=status.HTTP_201_CREATED)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+			username_exists = serializer.check_username_exists(User.get_obj(user)['username'], request.data['username'])
+			email_exists = serializer.check_email_exists(User.get_obj(user)['email'], request.data['email'])
+			if username_exists:
+				raise ValidationError('Username already exists', code="validation_error")
+			elif email_exists:
+				raise ValidationError('Email already exists', code="validation_error")
+			else:
+				user = User.objects.create_user(serializer.data.get(
+					'username'), serializer.data.get('email'), serializer.data.get('password'))
+				user.first_name = serializer.data.get('first_name', '')
+				user.last_name = serializer.data.get('last_name', '')
+				user.save()
+				new_user = UserDetailSerializer(user)
+				return Response(new_user.data, status=status.HTTP_201_CREATED)
+		else:
+			raise ValidationError(serializer.errors, code='validation_error')
+
 
 	@swagger_auto_schema(tags=["Admin users"])
 	def update(self, request, pk):
