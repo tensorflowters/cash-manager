@@ -27,7 +27,9 @@ import 'dart:convert';
 
 List<Widget> widgetItems = [];
 
-void main() {
+void main() async {
+  await dotenv.load();
+
   runApp(
     MyApp(),
   );
@@ -56,6 +58,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Future<List<Product>> fetchCategoryList() async {
     //fetch ici
+    log('${dotenv.env['PATH_HOST']!}/api/categories');
     final response = await http
         .get(Uri.parse(('${dotenv.env['PATH_HOST']!}/api/categories/')));
     if (response.statusCode == 200) {
