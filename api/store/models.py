@@ -75,6 +75,17 @@ class Cart(models.Model):
     def __repr__(self):
         return f'Cart(id={self.id}, user={self.user})'
 
+    def get_articles(self, cart_serializer, cart_article_serializer):
+        cart = self
+        cart_articles = CartArticle.objects.filter(cart=cart)
+        cart_serializer = cart_serializer(cart)
+        cart_articles_serializer = cart_article_serializer(cart_articles, many=True)
+        serialized_cart = cart_serializer.data
+        serialized_cart_articles = cart_articles_serializer.data
+        serialized_cart["cart_articles"] = serialized_cart_articles
+
+        return serialized_cart
+
 
 class CartArticle(models.Model):
     article = models.ForeignKey(

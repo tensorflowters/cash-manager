@@ -12,7 +12,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from authentication.models import User
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
-from authentication.serializers import UserDetailSerializer, UserSerializer, UserAuthSerializer, UserAuthSerializerPATCH, \
+from authentication.serializers import UserDetailSerializer, UserAuthSerializer, UserAuthSerializerPATCH, \
 									   RegistrationSerializer, LoginSerializer, RefreshResponseSerializer, PasswordAuthSerializer, \
 										 UserDetailSerializerPATCH, UserDetailSerializerPOST
 from authentication.utils import get_tokens_for_user
