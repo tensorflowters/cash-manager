@@ -16,14 +16,18 @@ class Product {
     _productName = productName;
   }
 
+  int getProductID() {
+    return _productID;
+  }
+
   String getProductName() {
     return _productName;
   }
 
   Future<List<Article>> getArticleList() async {
     //fetch ici
-    final response = await http.get(Uri.parse(
-        'http://cashm-loadb-6c77i08jb3gn-3d2b8e5c5d258b73.elb.eu-west-3.amazonaws.com:8000/api/categories/'));
+    final response =
+        await http.get(Uri.parse('http://localhost:5000/api/categories/'));
     if (response.statusCode == 200) {
       var a = jsonDecode(response.body);
       log(a.toString());
