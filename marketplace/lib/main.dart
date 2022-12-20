@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:marketplace/Article.dart';
 import 'package:marketplace/Product.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
@@ -55,8 +56,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Future<List<Product>> fetchCategoryList() async {
     //fetch ici
-    final response = await http.get(Uri.parse(
-        'http://cashm-loadb-6c77i08jb3gn-3d2b8e5c5d258b73.elb.eu-west-3.amazonaws.com:8000/api/categories/'));
+    final response = await http
+        .get(Uri.parse(('${dotenv.env['PATH_HOST']!}/api/categories/')));
     if (response.statusCode == 200) {
       log(response.body.toString());
       var a = jsonDecode(response.body);
