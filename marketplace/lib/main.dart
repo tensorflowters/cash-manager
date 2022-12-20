@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:marketplace/Article.dart';
 import 'package:marketplace/Product.dart';
+import 'package:marketplace/login_screen.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:http/http.dart' as http;
 import 'User.dart';
@@ -79,6 +81,13 @@ class _MyAppState extends State<MyApp> {
     log(pL.toString());
   }
 
+  Future<String?> accesToken() async {
+    final storage = new FlutterSecureStorage();
+    String? accessToken = await storage.read(key: "accessToken");
+
+    return accessToken.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -95,13 +104,8 @@ class _MyAppState extends State<MyApp> {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(
-        title: 'Market P',
-        savedItem: widget.savedItem,
-        user: widget.currentUser,
-        selectedIndex: widget.selectexIndex,
-        categoryList: widget.categoryList,
-      ),
+     home: LoginScreen(),
+        //
       // Start the app with the "/" named route. In this case, the app starts
       // on the FirstScreen widget.
       //initialRoute: '/',
