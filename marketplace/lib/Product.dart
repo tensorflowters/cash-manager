@@ -30,7 +30,7 @@ class Product {
     }
 
     //http://cashm-loadb-6c77i08jb3gn-3d2b8e5c5d258b73.elb.eu-west-3.amazonaws.com:8000/api/articles
-    return [Article(0, "article 1"), Article(1, "article 2")];
+    return [/* Article(0, "article 1"), Article(1, "article 2") */];
   }
 }
 
