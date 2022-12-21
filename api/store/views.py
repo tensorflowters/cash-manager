@@ -197,9 +197,11 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 					elif not cart_articles.exists():
 						CartArticle.objects.create(
 							article=article.first(), 
-							cart=cart
+							cart=cart,
+							quantity=1
 						)
-						serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+						updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart_user_id)
+						serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
 						return Response({ "message": "Article added to cart with success", 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
 
@@ -207,19 +209,23 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 						cart_article = cart_articles.filter(article=article.first())
 
 						if cart_article.exists():
-							quantity = CartArticleSerializer(cart_article.first()).data.get("quantity")
-							newQuantity =  quantity + 1
-							cart_article.update(quantity=newQuantity)
-							serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+							cart_article_id = cart_article.first().id
+							quantity = cart_article.first().quantity
+							new_quantity =  quantity + 1
+							CartArticle.objects.filter(pk=cart_article_id).update(quantity=new_quantity)
+							updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart.id)
+							serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
 							return Response({ "message": "Article quantity updated with success", 'cart': serialized_cart }, status=status.HTTP_200_OK)
 
 						else:
 							CartArticle.objects.create(
 								article=article.first(), 
-								cart=cart
+								cart=cart,
+								quantity=1
 							)
-							serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+							updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart_user_id)
+							serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
 							return Response({ "message": "Article added to cart with success", 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
 								
@@ -254,17 +260,20 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 					cart_article = cart_articles.filter(article=article.first())
 
 					if cart_article.exists():
-						newQuantity = CartArticleSerializer(cart_article.first()).data.get("quantity") - 1
+						new_quantity = cart_article.first().quantity - 1
 
-						if newQuantity <= 0:
+						if new_quantity == 0:
 							cart_article.delete()
-							serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+							updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart.id)
+							serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
 							return Response({"message": "Article removed from cart", 'cart': serialized_cart }, status=status.HTTP_200_OK)
 
 						else:
-							cart_article.update(quantity=newQuantity)
-							serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+							cart_article_id = cart_article.first().id
+							CartArticle.objects.filter(pk=cart_article_id).update(quantity=new_quantity)
+							updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart.id)
+							serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
 							return Response({"message": "Quantity updated", 'cart': serialized_cart }, status=status.HTTP_200_OK)
 
@@ -292,7 +301,7 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 					cart = queryset.first()
 					article = Article.objects.filter(pk=article_id)
 					cart_articles = CartArticle.objects.filter(cart=cart)
-					newQuantity = request.data.get("quantity")
+					new_quantity = request.data.get("quantity")
 
 					if not article.exists():
 						raise NotFound('No article found', code='not_found')
@@ -301,29 +310,34 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 						cart_article = cart_articles.filter(article=article.first())
 
 						if cart_article.exists():
-							quantity_validation = Article.validate_quantity(article.first(), newQuantity, True)
+							quantity_validation = Article.validate_quantity(article.first(), new_quantity, True)
 
 							if quantity_validation["is_valid"]:
 
-								if newQuantity == 0:
+								if new_quantity == 0:
 									cart_article.delete()
-									serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
-									return Response({"message": quantity_validation["message"], "cart": serialized_cart }, status=status.HTTP_200_OK)
+									updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart.id)
+									serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
+
+									return Response({"message": "Article removed from cart", 'cart': serialized_cart }, status=status.HTTP_202_ACCEPTED)
 
 								else:
-									cart_article.update(quantity=newQuantity)
-									serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+									cart_article_id = cart_article.first().id
+									CartArticle.objects.filter(pk=cart_article_id).update(quantity=new_quantity)
+									updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart.id)
+									serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 									return Response({"message":  quantity_validation["message"], 'cart': serialized_cart }, status=status.HTTP_200_OK)
 							
 							else:
 								raise ParseError(quantity_validation["message"], code='parse_error')
 
 						else:
-							quantity_validation = Article.validate_quantity(article.first(), newQuantity, False)
+							quantity_validation = Article.validate_quantity(article.first(), new_quantity, False)
 
 							if quantity_validation["is_valid"]:
-								CartArticle.objects.create(article=article.first(), cart=cart, quantity=newQuantity)
-								serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+								CartArticle.objects.create(article=article.first(), cart=cart, quantity=new_quantity)
+								updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart_user_id)
+								serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
 								return Response({ "message": quantity_validation["message"], 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
 
@@ -331,11 +345,12 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 								raise ParseError(quantity_validation["message"], code='parse_error')
 
 					else:
-						quantity_validation = Article.validate_quantity(article.first(), newQuantity, False)
+						quantity_validation = Article.validate_quantity(article.first(), new_quantity, False)
 
 						if quantity_validation["is_valid"]:
-							CartArticle.objects.create(article=article.first(), cart=cart, quantity=newQuantity)
-							serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+							CartArticle.objects.create(article=article.first(), cart=cart, quantity=new_quantity)
+							updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart_user_id)
+							serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
 							return Response({ "message": quantity_validation["message"], 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
 
