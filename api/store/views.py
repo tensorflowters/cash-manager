@@ -166,14 +166,14 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 	def list(self, request):
 		queryset = self.get_queryset()
 
-		if isinstance(queryset, EmptyQuerySet):
-			raise NotFound('No cart found', code='not_found')
-
-		else:
+		if queryset.exists():
 			cart = queryset.first()
 			serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
 
 			return Response(serialized_cart, status=status.HTTP_200_OK)
+		
+		else:
+			raise NotFound('No cart found', code='not_found')
 
 
 	@swagger_auto_schema(tags=["Authenticated carts"])
@@ -182,10 +182,7 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 	def add_article(self, request, pk, article_id):
 		queryset = self.get_queryset()
 
-		if isinstance(queryset, EmptyQuerySet):
-			raise NotFound('No cart found', code='not_found')
-
-		else:
+		if queryset.exists():
 			cart_user_id = queryset.get().id
 
 			if cart_user_id == int(pk):
@@ -193,10 +190,11 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 					article = Article.objects.filter(pk=article_id)
 					cart_articles = CartArticle.objects.filter(cart=cart)
 
-					if isinstance(article, EmptyQuerySet):
+
+					if not article.exists():
 						raise NotFound('No article found', code='not_found')
 
-					elif isinstance(cart_articles, EmptyQuerySet):
+					elif not cart_articles.exists():
 						CartArticle.objects.create(
 							article=article.first(), 
 							cart=cart
@@ -228,71 +226,128 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 			else:
 				raise PermissionDenied
 
+		else:
+			raise NotFound('No cart found', code='not_found')
+
+
 	@swagger_auto_schema(tags=["Authenticated carts"])
 	@method_decorator(csrf_exempt)
 	@action(detail=True, methods=['delete'], url_path=r'remove/(?P<article_id>[^/.]+)', permission_classes=[IsUserAuthenticated])
 	def remove_article(self, request, pk, article_id):
-		try:
-			cart = Cart.objects.get(pk=pk)
-			article = Article.objects.get(pk=article_id)
-			card_article = CartArticle.objects.filter(article=article, cart=cart)
-			if card_article.exists():
-				newQuantity = CartArticleSerializer(
-					card_article.first()).data.get("quantity") - 1
-				if newQuantity <= 0:
-					card_article.delete()
-					return Response({"message": "Article removed from cart"}, status=status.HTTP_200_OK)
+		queryset = self.get_queryset()
+
+		if queryset.exists():
+			cart_user_id = queryset.get().id
+
+			if cart_user_id == int(pk):
+				cart = queryset.first()
+				article = Article.objects.filter(pk=article_id)
+				cart_articles = CartArticle.objects.filter(cart=cart)
+
+				if not article.exists():
+						raise NotFound('No article found', code='not_found')
+
+				elif not cart_articles.exists():
+					raise NotFound('No article found. Cart is empty', code='not_found')
+
 				else:
-					card_article.update(quantity=newQuantity)
-					return Response({"message": "Quantity updated", 'card_article': CartArticleSerializer(card_article.get()).data}, status=status.HTTP_200_OK)
+					cart_article = cart_articles.filter(article=article.first())
+
+					if cart_article.exists():
+						newQuantity = CartArticleSerializer(cart_article.first()).data.get("quantity") - 1
+
+						if newQuantity <= 0:
+							cart_article.delete()
+							serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+
+							return Response({"message": "Article removed from cart", 'cart': serialized_cart }, status=status.HTTP_200_OK)
+
+						else:
+							cart_article.update(quantity=newQuantity)
+							serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+
+							return Response({"message": "Quantity updated", 'cart': serialized_cart }, status=status.HTTP_200_OK)
+
+					else:
+						raise NotFound('Article not found in cart', code='not_found')
+			
 			else:
-				raise NotFound('No article found in cart', code='not_found')
+				raise PermissionDenied
+
+		else:
+			raise NotFound('No cart found', code='not_found')
 		
-		except ObjectDoesNotExist:
-			raise NotFound('No cart or article found', code='not_found')
+
 
 	@swagger_auto_schema(tags=["Authenticated carts"])
 	@method_decorator(csrf_exempt)
 	@action(detail=True, methods=['put'], url_path=r'set_quantity/(?P<article_id>[^/.]+)', permission_classes=[IsUserAuthenticated])
 	def set_quantity_article(self, request, pk, article_id):
-		try:
-			cart = Cart.objects.get(pk=pk)
-			article = Article.objects.get(pk=article_id)
-			card_article = CartArticle.objects.filter(article=article, cart=cart)
-			newQuantity = request.data.get("quantity")
+		queryset = self.get_queryset()
 
-			if card_article.exists():
-				if newQuantity is not None:
-					if isinstance(newQuantity, int) and newQuantity >= 0:
-						if newQuantity == 0:
-							card_article.delete()
-							return Response({"message": "Article removed from cart"}, status=status.HTTP_204_NO_CONTENT)
+		if queryset.exists():
+			cart_user_id = queryset.get().id
+
+			if cart_user_id == int(pk):
+					cart = queryset.first()
+					article = Article.objects.filter(pk=article_id)
+					cart_articles = CartArticle.objects.filter(cart=cart)
+					newQuantity = request.data.get("quantity")
+
+					if not article.exists():
+						raise NotFound('No article found', code='not_found')
+
+					elif cart_articles.exists():
+						cart_article = cart_articles.filter(article=article.first())
+
+						if cart_article.exists():
+							quantity_validation = Article.validate_quantity(article.first(), newQuantity, True)
+
+							if quantity_validation["is_valid"]:
+
+								if newQuantity == 0:
+									cart_article.delete()
+									serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+									return Response({"message": quantity_validation["message"], "cart": serialized_cart }, status=status.HTTP_200_OK)
+
+								else:
+									cart_article.update(quantity=newQuantity)
+									serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+									return Response({"message":  quantity_validation["message"], 'cart': serialized_cart }, status=status.HTTP_200_OK)
+							
+							else:
+								raise ParseError(quantity_validation["message"], code='parse_error')
+
 						else:
-							card_article.update(quantity=newQuantity)
-							return Response({"message": "Quantity updated", 'card_article': CartArticleSerializer(card_article.first()).data}, status=status.HTTP_200_OK)
+							quantity_validation = Article.validate_quantity(article.first(), newQuantity, False)
+
+							if quantity_validation["is_valid"]:
+								CartArticle.objects.create(article=article.first(), cart=cart, quantity=newQuantity)
+								serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+
+								return Response({ "message": quantity_validation["message"], 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
+
+							else:
+								raise ParseError(quantity_validation["message"], code='parse_error')
+
 					else:
-						raise ParseError('Quantity need to be a positive or equal to zero integer', code='parse_error')
-				else:
-					raise ParseError('Quantity cannot be blank', code='parse_error')
+						quantity_validation = Article.validate_quantity(article.first(), newQuantity, False)
+
+						if quantity_validation["is_valid"]:
+							CartArticle.objects.create(article=article.first(), cart=cart, quantity=newQuantity)
+							serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+
+							return Response({ "message": quantity_validation["message"], 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
+
+						else:
+							raise ParseError(quantity_validation["message"], code='parse_error')
+
 			else:
-				if newQuantity is not None:
-					if isinstance(newQuantity, int) and newQuantity >= 0:
-						if newQuantity != 0:
-							new_card_article = CartArticle.objects.create(
-								article=article, cart=cart)
-							new_card_article = CartArticle.objects.filter(
-								article=article, cart=cart)
-							new_card_article.update(quantity=newQuantity)
-							return Response({"message": "Articled added to cart", 'card_article': CartArticleSerializer(new_card_article.first()).data}, status=status.HTTP_201_CREATED)
-						else:
-							raise ParseError('Quantity cannot be null', code='parse_error')
-					else:
-						raise ParseError('Quantity need to be a positive or equal to zero integer', code='parse_error')
-				else:
-					raise ParseError('Quantity cannot be blank', code='parse_error')
-		
-		except ObjectDoesNotExist:
-			raise
+				raise PermissionDenied
+
+		else:
+			raise NotFound('No cart found. Please contact your administrator', code='not_found')
+
 
 class TestStripeView(APIView):
 

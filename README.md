@@ -30,12 +30,15 @@ docker-compose -f docker-compose.local.yml -p cash_manager exec api_dev python m
 ### 4. Exporting data from database for the next seed
 Login on http://127.0.0.1:8000/admin/login/
 <p>&nbsp;</p>
+
 pg_dump -U <db_username> <db_name> -h <host> -t <table_name> > seed.sql
 Host can be found with docker inspect <the_container_id> of the database
 <p>&nbsp;</p>
+
 ```bash
 docker-compose -f docker-compose.local.yml -p cash_manager exec db_dev pg_dump -U postgres postgres -h 172.27.0.2 > seed.sql
 ```
+
 <p>&nbsp;</p>
 
 ### 5. Make migrations

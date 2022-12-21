@@ -23,7 +23,6 @@ class CustomExceptionFormatter(ExceptionFormatter):
           }
 
         else:
-          print(error_response)
           return {
             "message": error_response.errors[0].detail,
             "type": error_response.errors[0].code,
