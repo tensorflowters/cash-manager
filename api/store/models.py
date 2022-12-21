@@ -66,6 +66,36 @@ class Article(models.Model):
     def get_price(self):
         return self.price
 
+    def get_in_stock_quantity(self):
+        return self.in_stock_quantity
+
+    def validate_quantity(self, quantity, is_article_in_cart):
+        if quantity is not None:
+
+            if isinstance(quantity, int) and quantity >= 0:
+                new_in_stock_quantity = self.in_stock_quantity - quantity
+
+                if quantity == 0:
+
+                    if is_article_in_cart:
+                        return { "is_valid": True, "message": "Article removed from cart", "quantity": quantity, "new_in_stock_quantity": new_in_stock_quantity }
+                    
+                    else:
+                        return { "is_valid": False, "message": "Cannot remove article if it's not in cart", "quantity": quantity, "new_in_stock_quantity": new_in_stock_quantity }
+
+                elif new_in_stock_quantity >= 0:
+                    return { "is_valid": True, "message": f"You have now {quantity} {self.name} in your cart", "quantity": quantity, "new_in_stock_quantity": new_in_stock_quantity }
+
+                else:
+                    return { "is_valid": False, "message": f"Not enough articles in stock. Only {self.in_stock_quantity} {self.name} remaining in stock", "quantity": quantity, "new_in_stock_quantity": new_in_stock_quantity  }
+
+            else:
+                return { "is_valid": False, "message": "Quantity need to be a integer greater than or equal to 0", "quantity": quantity, "new_in_stock_quantity": quantity  }
+
+        else:
+            return { "is_valid": False, "message": "Quantity cannot be blank", "quantity": quantity, "new_in_stock_quantity": quantity  }
+
+
 
 class Cart(models.Model):
 
