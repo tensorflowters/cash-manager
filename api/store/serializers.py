@@ -90,10 +90,11 @@ class CartSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     user = serializers.SlugRelatedField(
         queryset=User.objects.all(), slug_field='username')
+    total_amount = serializers.DecimalField(max_digits=8, decimal_places=2, required=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'user']
+        fields = ['id', 'user', 'total_amount']
 
 
 class CartArticleSerializer(serializers.Serializer):

@@ -1,4 +1,4 @@
-from django.db import models, transaction
+from django.db import models, transaction, DatabaseError
 
 
 class Category(models.Model):
@@ -46,6 +46,7 @@ class Product(models.Model):
 
 
 class Article(models.Model):
+
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=255)
@@ -96,14 +97,14 @@ class Article(models.Model):
             return { "is_valid": False, "message": "Quantity cannot be blank", "quantity": quantity, "new_in_stock_quantity": quantity  }
 
 
-
 class Cart(models.Model):
 
     user = models.ForeignKey('authentication.User',
                              on_delete=models.CASCADE, related_name="carts")
+    total_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
     def __repr__(self):
-        return f'Cart(id={self.id}, user={self.user})'
+        return f'Cart(id={self.id}, user={self.user}, total_amount={self.total_amount})'
 
     def get_articles(self, cart_serializer, cart_article_serializer):
         cart = self
@@ -112,19 +113,37 @@ class Cart(models.Model):
         cart_articles_serializer = cart_article_serializer(cart_articles, many=True)
         serialized_cart = cart_serializer.data
         serialized_cart_articles = cart_articles_serializer.data
-        serialized_cart["cart_articles"] = serialized_cart_articles
+        serialized_cart["articles"] = serialized_cart_articles
 
         return serialized_cart
 
 
+class CartArticleManager(models.Manager):
+    
+    def calculate_total_amount(self, cart_id):
+        cart = Cart.objects.filter(pk=cart_id)
+        cart_articles = CartArticle.objects.filter(cart=cart_id)
+        updated_total_amount = 0
+
+        if cart_articles.exists():
+            for cart_article in cart_articles:
+                updated_total_amount = updated_total_amount + (cart_article.quantity*cart_article.article.price)
+
+        cart.update(total_amount=updated_total_amount)
+
+        return Cart.objects.filter(pk=cart_id).first()
+
+
+
 class CartArticle(models.Model):
+
     article = models.ForeignKey(
         'store.Article', on_delete=models.CASCADE, related_name='cart_articles')
-
     cart = models.ForeignKey(
         'store.Cart', on_delete=models.CASCADE, related_name='cart_articles')
-
     quantity = models.IntegerField(default=1)
+
+    objects = CartArticleManager()
 
     def __repr__(self):
         return f'CartArticle(id={self.id}, article={self.article}, cart={self.cart}, quantity={self.quantity})'
