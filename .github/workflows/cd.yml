@@ -12,7 +12,9 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Build Updated Docker Compose Environment
-      run: docker-compose build
+      run: |
+        cd t-dev-700-par-11-deployment/t-dev-700-par-11-deployment/api/
+        docker-compose build
 
     - name: Stop Old Docker Compose Environment
       run: docker-compose down
