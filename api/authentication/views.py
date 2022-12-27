@@ -23,6 +23,7 @@ class RegisterViewset(mixins.CreateModelMixin, GenericViewSet):
 	serializer_class = RegistrationSerializer
 	queryset = User.objects.all()
 
+	@method_decorator(csrf_exempt)
 	@swagger_auto_schema(tags=["Authentication"])
 	def create(self, request):
 		serializer = RegistrationSerializer(data=request.data)
@@ -60,6 +61,7 @@ class LogoutViewset(mixins.CreateModelMixin, GenericViewSet):
 	serializer_class = LoginSerializer
 	queryset = User.objects.all()
 
+	@method_decorator(csrf_exempt)
 	@swagger_auto_schema(tags=["Authentication"])
 	def create(self, request):
 		logout(request)
