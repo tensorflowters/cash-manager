@@ -1,17 +1,15 @@
 from pathlib import Path
+import os
 from datetime import timedelta
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-SECRET_KEY = 'django-insecure-%3i1^cb0ce%djzf^4ep4j&_nxft4n8asz(z%*_p*1*r#d1+js#'
-
-
-DEBUG = True
-
-
-ALLOWED_HOSTS = ['*']
+DEBUG = int(os.environ.get("DEBUG", default=0))
+if DEBUG == 1:
+    from .config_dev import *
+else:
+    from .config_prod import *
 
 
 INSTALLED_APPS = [
@@ -38,6 +36,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 
@@ -62,18 +61,6 @@ TEMPLATES = [
 
 
 WSGI_APPLICATION = 'cash_manager.wsgi.application'
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db_dev',
-        'PORT': '5432',
-    }
-}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -101,7 +88,10 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

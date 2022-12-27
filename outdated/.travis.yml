@@ -1,0 +1,13 @@
+sudo: required
+
+services:
+  - docker
+
+script:
+  - echo "test"
+
+deploy:
+  provider: script
+  script: bash travis-deploy.sh
+  on:
+    branch: main

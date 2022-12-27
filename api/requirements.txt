@@ -6,3 +6,5 @@ drf-yasg
 psycopg2
 stripe==2.55.1
 python-dotenv==0.21.0 
+gunicorn
+whitenoise==6.2.0
