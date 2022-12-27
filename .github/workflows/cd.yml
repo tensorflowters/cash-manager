@@ -20,7 +20,7 @@ jobs:
       run: docker-compose down
 
     - name: Run Updated Docker Compose Environment
-      run: docker-compose up -d
+      run: docker-compose up
 
     - name: Remove Unused Docker Compose Environment
       run: |
