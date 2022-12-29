@@ -12,7 +12,7 @@ services:
 
   api:
     container_name: cash_manager_api
-    build: Dockerfile
+    build: .
     environment:
       - SECRET_KEY=verysecretKey
       - DEBUG=0
