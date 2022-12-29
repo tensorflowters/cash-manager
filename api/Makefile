@@ -1,3 +1,5 @@
+include .env
+
 .PHONY: help
 
 help:
@@ -61,7 +63,7 @@ recover_refactor: install docdown docup wait migration superuser
 	@echo "\t~~~~~~~~~~~~~~~\n"
 
 runserver:
-	@python manage.py runserver 127.0.0.1:8000
+	@python manage.py runserver ${HOST}:8000
 
 run_gunicorn:
 	@gunicorn cash_manager.wsgi:application --bind 0.0.0.0:8000 --daemon
