@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+
+  db:
+    container_name: cash_manager_db
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=secretpassword
+    volumes:
+      - database_volume:/var/lib/postgresql/data
+
+  api:
+    container_name: cash_manager_api
+    build: .
+    environment:
+      - DEBUG=$DEBUG
+      - HOST=$HOST
+      - ALLOWED_HOSTS=$ALLOWED_HOSTS
+      - SECRET_KEY=$SECRET_KEY
+      - DB_NAME=$DB_NAME
+      - DB_HOST=$DB_HOST
+      - DB_PORT=$DB_PORT
+      - DB_USER=$DB_USER
+      - DB_PASSWORD=$DB_PASSWORD
+    command: make runproxyversion
+    depends_on:
+      - db
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+
+  server:
+    container_name: cash_manager_server
+    image: nginx:stable
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+      - ./nginx/prod-local-conf/:/etc/nginx/conf.d/:ro
+
+volumes:
+  database_volume:
+  static_volume:
+  media_volume:
