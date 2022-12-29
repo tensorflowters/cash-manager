@@ -18,9 +18,6 @@ services:
       - ALLOWED_HOSTS=*
       - HOSTNAME=$HOST
     command: make runproxyversion
-    networks:
-      - nginx_network
-      - pg_network
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
@@ -33,8 +30,6 @@ services:
       - POSTGRES_PASSWORD=secretpassword
     volumes:
       - database_volume:/var/lib/postgresql/data
-    networks:
-      - pg_network
 
   nginx:
     container_name: cash_manager_nginx
@@ -45,26 +40,18 @@ services:
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
-      - ./nginx/conf/:/etc/nginx/conf.d/:ro
-      - ./certbot/www:/var/www/certbot/:ro
-      - ./certbot/conf/:/etc/nginx/ssl/:ro
+      - ./nginx/conf/:/etc/nginx/conf.d/
+      - ./certbot/www/:/var/www/certbot/
+      - ./certbot/conf/:/etc/nginx/ssl/
     depends_on:
       - apiservice
     restart: "always"
-    networks:
-      - nginx_network
 
   certbot:
     image: certbot/certbot:arm64v8-v1.32.2
     volumes:
-      - ./certbot/www/:/var/www/certbot/:rw
-      - ./certbot/conf/:/etc/letsencrypt/:rw
-
-networks:
-  nginx_network:
-    driver: bridge
-  pg_network:
-    driver: bridge
+      - ./certbot/www/:/var/www/certbot/
+      - ./certbot/conf/:/etc/letsencrypt/
 
 volumes:
   database_volume:

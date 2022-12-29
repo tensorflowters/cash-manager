@@ -1,26 +1,5 @@
-.PHONY: help
 
 HOST = ${HOSTNAME}
-
-help:
-	@echo "cash_manager Projects"
-	@echo "~~~~~~~~~~~~~~~"
-	@echo ""
-	@echo "check        : Health check"
-	@echo "coverage     : Make test coverage"
-	@echo "docup        : Run docker compose services"
-	@echo "docdown      : Stop docker containers"
-	@echo "migrations   : Make django migrations"
-	@echo "install      : Install python requirements"
-	@echo "recover      : docdown + docup + wait + migrations + loaddata"
-	@echo "runserver    : Run django server in debug mode"
-	@echo "run_gunicorn : Run django server with gunicorn"
-	@echo "static       : Collect static files"
-	@echo "superuser    : Create django super user"
-	@echo "test         : Start django test runner"
-	@echo "translation  : Translation operation"
-	@echo "wait         : Wait for 3 seconds"
-	@echo ""
 
 check:
 	@python manage.py check
