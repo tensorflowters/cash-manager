@@ -27,6 +27,10 @@ class Article {
     return _url;
   }
 
+  String getDescription() {
+    return _description;
+  }
+
   double getPrice() {
     return _price;
   }
@@ -45,6 +49,10 @@ class Article {
     }
   }
 
+  factory Article.fromJson(Map<String, dynamic> json, int quantity) {
+    return Article(json['id'], json['name'], json['url'], json['description'],
+        double.parse(json['price']), quantity);
+  }
   // Widget getArticleWidget() {
   //   return Widget();
   // }

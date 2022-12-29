@@ -1,5 +1,11 @@
 // ignore_for_file: unnecessary_new
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:marketplace/article_pop_up.dart';
 import 'package:quantity_input/quantity_input.dart';
 import 'package:http/http.dart' as http;
 import 'package:marketplace/Article.dart';
@@ -12,8 +18,43 @@ class CartView extends StatefulWidget {
 }
 
 class _CartViewState extends State<CartView> {
-  late final List<Article> savedItem;
+  late List<Article> savedItem = [];
   var simpleIntInput = 1;
+
+  void fetchArticle() async {
+    var response;
+    try {
+      response = await http.get(
+        Uri.parse('${dotenv.env['PATH_HOST']!}/api/authenticated/cart'),
+        // Send authorization headers to the backend.
+        headers: {
+          HttpHeaders.authorizationHeader:
+              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjcyMzI1Mjg5LCJqdGkiOiIxZGU3ODY0OGIxNWM0OTNjYjU5YjhmNTc5OGNlNzdmNiIsInVzZXJfaWQiOjJ9.qDFk0FCnbd_w0IstlGqyYcSMjdXI57qEFIAYHNpLMGc',
+        },
+      );
+    } catch (error) {
+      log(error.toString());
+    }
+
+    final responseJson = jsonDecode(response.body);
+
+    Map<String, dynamic> map = responseJson;
+
+    List<dynamic> data = map["articles"];
+    for (var i = 0; i < data.length; i++) {
+      setState(() {
+        savedItem
+            .add(Article.fromJson(data[i]['article'], data[i]['quantity']));
+      });
+    }
+    print(savedItem);
+  }
+
+  @override
+  void initState() {
+    this.fetchArticle();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

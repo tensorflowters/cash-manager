@@ -1,21 +1,52 @@
 import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
+import 'package:marketplace/Article.dart';
 import 'package:quantity_input/quantity_input.dart';
 import 'package:http/http.dart' as http;
 
-Future<Product> decodeArticle(id) async {
-  final response =
-      await http.get(Uri.parse(dotenv.env['PATH_HOST']! + '/api/articles/$id'));
+Future<Article> decodeArticle(id) async {
+  /* log(); */
+  log('${dotenv.env['PATH_HOST']!}/api/articles/${id!}');
+  var response = await http
+      .get(Uri.parse('${dotenv.env['PATH_HOST']!}/api/articles/${id!}'));
   if (response.statusCode == 200) {
-    return Product.fromJson(jsonDecode(response.body));
+    /* return Article.fromJson(response.body); */
+    return Article.fromJson(jsonDecode(response.body), 1);
   } else {
-    throw Exception("Failed");
+    log("ERREUR ZEBU");
     print("status code : " + response.statusCode.toString());
+    throw Exception("Failed");
   }
+
   //id = int.parse( retunObject.body[0]["id"]);
   //tab = retunObject;
   //print(retunObject);
+}
+
+void addToCart(id_article) async {
+  var response;
+  try {
+    response = await http.get(
+      Uri.parse(
+          '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/2/add/${id_article!}'),
+      // Send authorization headers to the backend.
+      headers: {
+        HttpHeaders.authorizationHeader:
+            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjcyMzI1Mjg5LCJqdGkiOiIxZGU3ODY0OGIxNWM0OTNjYjU5YjhmNTc5OGNlNzdmNiIsInVzZXJfaWQiOjJ9.qDFk0FCnbd_w0IstlGqyYcSMjdXI57qEFIAYHNpLMGc',
+      },
+    );
+  } catch (error) {
+    log(error.toString());
+  }
+
+  final responseJson = jsonDecode(response.body);
+  log(responseJson.toString());
+/* 
+    savedItem = new List<Article>.from(responseJson);
+    log(savedItem.toString()) ;*/
 }
 
 class Product {
@@ -50,7 +81,7 @@ class MyWidget extends StatefulWidget {
 }
 
 class _MyWidgetState extends State<MyWidget> {
-  late Future<Product> n; //= Product(id: 1, title: "title");
+  late Future<Article> n; //= Product(id: 1, title: "title");
 
   @override
   void initState() {
@@ -65,7 +96,7 @@ class _MyWidgetState extends State<MyWidget> {
     return Scaffold(
         backgroundColor: Colors.grey[300],
         body: Center(
-            child: FutureBuilder<Product>(
+            child: FutureBuilder<Article>(
           future: n,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -75,7 +106,7 @@ class _MyWidgetState extends State<MyWidget> {
                     flex: 4,
                     child: Container(
                         padding: EdgeInsets.all(40),
-                        child: Image.network(snapshot.data!.url)),
+                        child: Image.network(snapshot.data!.getUrl())),
                   ),
                   Expanded(
                     flex: 6,
@@ -97,7 +128,7 @@ class _MyWidgetState extends State<MyWidget> {
                                 left: 10.0, right: 0.0, top: 10.0, bottom: 0),
                             child: Container(
                               child: Text(
-                                snapshot.data!.name,
+                                snapshot.data!.getArticleName(),
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.grey[800],
@@ -123,7 +154,7 @@ class _MyWidgetState extends State<MyWidget> {
                                 top: 5.0,
                                 bottom: 10.0),
                             child: Text(
-                              "${snapshot.data!.price}€ ",
+                              "${snapshot.data!.getPrice()}€ ",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey[800],
@@ -135,20 +166,11 @@ class _MyWidgetState extends State<MyWidget> {
                         Container(
                           height: 200,
                           padding: EdgeInsets.all(10),
-                          child: const SingleChildScrollView(
+                          child: SingleChildScrollView(
                             scrollDirection: Axis.vertical, //.horizontal
                             child: Text(
-                              "1 Description that is too long in text format(Here Data is coming from API) jdlksaf j klkjjflkdsjfkddfdfsdfds "
-                              "2 Description that is too long in text format(Here Data is coming from API) d fsdfdsfsdfd dfdsfdsf sdfdsfsd d "
-                              "3 Description that is too long in text format(Here Data is coming from API)  adfsfdsfdfsdfdsf   dsf dfd fds fs"
-                              "4 Description that is too long in text format(Here Data is coming from API) dsaf dsafdfdfsd dfdsfsda fdas dsad"
-                              "5 Description that is too long in text format(Here Data is coming from API) dsfdsfd fdsfds fds fdsf dsfds fds "
-                              "6 Description that is too long in text format(Here Data is coming from API) asdfsdfdsf fsdf sdfsdfdsf sd dfdsf"
-                              "7 Description that is too long in text format(Here Data is coming from API) df dsfdsfdsfdsfds df dsfds fds fsd"
-                              "8 Description that is too long in text format(Here Data is coming from API)"
-                              "9 Description that is too long in text format(Here Data is coming from API)"
-                              "10 Description that is too long in text format(Here Data is coming from API)",
-                              style: TextStyle(
+                              snapshot.data!.getDescription(),
+                              style: const TextStyle(
                                 fontSize: 16.0,
                                 color: Colors.black,
                               ),
@@ -175,7 +197,9 @@ class _MyWidgetState extends State<MyWidget> {
                                   child: Align(
                                     alignment: Alignment.centerRight,
                                     child: Text(
-                                      snapshot.data!.price * simpleIntInput,
+                                      (snapshot.data!.getPrice() *
+                                              simpleIntInput)
+                                          .toString(),
                                       textAlign: TextAlign.right,
                                     ),
                                   ),
@@ -194,7 +218,10 @@ class _MyWidgetState extends State<MyWidget> {
                                     padding: EdgeInsets.all(20),
                                   ),
                                   child: Text('Ajouter au panier'),
-                                  onPressed: () => {Navigator.pop(context)},
+                                  onPressed: () => {
+                                    addToCart(widget.articleId),
+                                    Navigator.pop(context)
+                                  },
                                 ),
                               ],
                             )),
