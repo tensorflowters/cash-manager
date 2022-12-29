@@ -7,9 +7,7 @@ import 'package:marketplace/Article.dart';
 import 'package:quantity_input/quantity_input.dart';
 import 'package:http/http.dart' as http;
 
-Future<Article> decodeArticle(id) async {
-  /* log(); */
-  log('${dotenv.env['PATH_HOST']!}/api/articles/${id!}');
+Future<Article> decodeArticle(id, context) async {
   var response = await http
       .get(Uri.parse('${dotenv.env['PATH_HOST']!}/api/articles/${id!}'));
   if (response.statusCode == 200) {
@@ -20,10 +18,6 @@ Future<Article> decodeArticle(id) async {
     print("status code : " + response.statusCode.toString());
     throw Exception("Failed");
   }
-
-  //id = int.parse( retunObject.body[0]["id"]);
-  //tab = retunObject;
-  //print(retunObject);
 }
 
 addToCart(id_article) async {
@@ -34,20 +28,14 @@ addToCart(id_article) async {
           '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/2/add/${id_article!}'),
       // Send authorization headers to the backend.
       headers: {
-        HttpHeaders.authorizationHeader:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjcyMzI1Mjg5LCJqdGkiOiIxZGU3ODY0OGIxNWM0OTNjYjU5YjhmNTc5OGNlNzdmNiIsInVzZXJfaWQiOjJ9.qDFk0FCnbd_w0IstlGqyYcSMjdXI57qEFIAYHNpLMGc',
+        HttpHeaders.authorizationHeader: 'Bearer ${dotenv.env['TOKEN']}',
       },
     );
-    log(response.toString());
   } catch (error) {
     log(error.toString());
   }
 
   final responseJson = jsonDecode(response.body);
-  log(responseJson.toString());
-/* 
-    savedItem = new List<Article>.from(responseJson);
-    log(savedItem.toString()) ;*/
 }
 
 class Product {
@@ -87,7 +75,7 @@ class _MyWidgetState extends State<MyWidget> {
   @override
   void initState() {
     super.initState();
-    n = decodeArticle(widget.articleId);
+    n = decodeArticle(widget.articleId, context);
   }
 
   var simpleIntInput = 1;
@@ -101,136 +89,156 @@ class _MyWidgetState extends State<MyWidget> {
           future: n,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              return Column(
+              return Stack(
                 children: [
-                  Expanded(
-                    flex: 4,
-                    child: Container(
-                        padding: EdgeInsets.all(40),
-                        child: Image.network(snapshot.data!.getUrl())),
-                  ),
-                  Expanded(
-                    flex: 6,
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                          left: 20.0, right: 20.0, top: 15.0, bottom: 0),
-                      decoration: const BoxDecoration(
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(30),
-                          bottom: Radius.circular(0),
-                        ),
+                  Column(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: Container(
+                            padding: EdgeInsets.all(40),
+                            child: Image.network(snapshot.data!.getUrl())),
                       ),
-                      child: Column(children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                                left: 10.0, right: 0.0, top: 10.0, bottom: 0),
-                            child: Container(
-                              child: Text(
-                                snapshot.data!.getArticleName(),
-                                style: TextStyle(
+                      Expanded(
+                        flex: 6,
+                        child: Container(
+                          padding: const EdgeInsets.only(
+                              left: 20.0, right: 20.0, top: 15.0, bottom: 0),
+                          decoration: const BoxDecoration(
+                            color: Color.fromARGB(255, 255, 255, 255),
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(30),
+                              bottom: Radius.circular(0),
+                            ),
+                          ),
+                          child: Column(children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 10.0,
+                                    right: 0.0,
+                                    top: 10.0,
+                                    bottom: 0),
+                                child: Container(
+                                  child: Text(
+                                    snapshot.data!.getArticleName(),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey[800],
+                                        fontSize: 30),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: Color.fromARGB(226, 163, 215, 163),
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(10),
+                                    bottom: Radius.circular(10),
+                                  ),
+                                ),
+                                margin: const EdgeInsets.only(left: 10.0),
+                                padding: const EdgeInsets.only(
+                                    left: 10.0,
+                                    right: 10.0,
+                                    top: 5.0,
+                                    bottom: 10.0),
+                                child: Text(
+                                  "${snapshot.data!.getPrice()}€ ",
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.grey[800],
-                                    fontSize: 30),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Color.fromARGB(226, 163, 215, 163),
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(10),
-                                bottom: Radius.circular(10),
-                              ),
-                            ),
-                            margin: const EdgeInsets.only(left: 10.0),
-                            padding: const EdgeInsets.only(
-                                left: 10.0,
-                                right: 10.0,
-                                top: 5.0,
-                                bottom: 10.0),
-                            child: Text(
-                              "${snapshot.data!.getPrice()}€ ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[800],
-                                fontSize: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 200,
-                          padding: EdgeInsets.all(10),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical, //.horizontal
-                            child: Text(
-                              snapshot.data!.getDescription(),
-                              style: const TextStyle(
-                                fontSize: 16.0,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        SizedBox(
-                            width: double.maxFinite,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Container(
-                                  child: QuantityInput(
-                                      value: simpleIntInput,
-                                      buttonColor:
-                                          Color.fromARGB(226, 163, 215, 163),
-                                      onChanged: (value) => setState(() =>
-                                          simpleIntInput = int.parse(
-                                              value.replaceAll(',', '')))),
+                                    fontSize: 20,
+                                  ),
                                 ),
-                                Container(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      (snapshot.data!.getPrice() *
-                                              simpleIntInput)
-                                          .toString(),
-                                      textAlign: TextAlign.right,
+                              ),
+                            ),
+                            Container(
+                              height: 200,
+                              padding: EdgeInsets.all(10),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical, //.horizontal
+                                child: Text(
+                                  snapshot.data!.getDescription(),
+                                  style: const TextStyle(
+                                    fontSize: 16.0,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            SizedBox(
+                                width: double.maxFinite,
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Container(
+                                      child: QuantityInput(
+                                          value: simpleIntInput,
+                                          buttonColor: Color.fromARGB(
+                                              226, 163, 215, 163),
+                                          onChanged: (value) => setState(() =>
+                                              simpleIntInput = int.parse(
+                                                  value.replaceAll(',', '')))),
                                     ),
-                                  ),
-                                )
-                              ],
-                            )),
-                        SizedBox(
-                            width: double.maxFinite, // <-- match_parent
-                            height: 60, // <-- match-parent
-                            child: Column(
-                              children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        Color.fromARGB(226, 163, 215, 163),
-                                    padding: EdgeInsets.all(20),
-                                  ),
-                                  child: Text('Ajouter au panier'),
-                                  onPressed: () async => {
-                                    await addToCart(widget.articleId),
-                                    Navigator.pop(context)
-                                  },
-                                ),
-                              ],
-                            )),
-                      ]),
-                    ),
+                                    Container(
+                                      child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          (snapshot.data!.getPrice() *
+                                                  simpleIntInput)
+                                              .toString(),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                )),
+                            SizedBox(
+                                width: double.maxFinite, // <-- match_parent
+                                height: 60, // <-- match-parent
+                                child: Column(
+                                  children: [
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Color.fromARGB(226, 163, 215, 163),
+                                        padding: EdgeInsets.all(20),
+                                      ),
+                                      child: Text('Ajouter au panier'),
+                                      onPressed: () async => {
+                                        addToCart(widget.articleId),
+                                        Navigator.pop(context, "Ok")
+                                      },
+                                    ),
+                                  ],
+                                )),
+                          ]),
+                        ),
+                      ),
+                    ],
                   ),
+                  Positioned(
+                      left: 10,
+                      top: 30,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(255, 136, 136, 136),
+                          padding: EdgeInsets.all(20),
+                        ),
+                        child: Text('Retour'),
+                        onPressed: () async => {Navigator.pop(context, "Back")},
+                      ))
                 ],
               );
+
               //return (Text(snapshot.data!.name));
             } else if (snapshot.hasError) {
               return Text('${snapshot.error}');

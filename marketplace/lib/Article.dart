@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:developer';
 import 'dart:ffi';
+import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/cupertino.dart';
 
@@ -27,6 +32,10 @@ class Article {
     return _url;
   }
 
+  int getId() {
+    return _articleID;
+  }
+
   String getDescription() {
     return _description;
   }
@@ -39,14 +48,21 @@ class Article {
     return _quantity;
   }
 
-  int setQuantity(int qte) {
+  void setQuantity(int qte) async {
     _quantity = _quantity + qte;
-    if (_quantity < 1) {
-      _quantity = 0;
-      return _quantity;
-    } else {
-      return _quantity;
-    }
+
+    var response = await http.put(
+        Uri.parse(
+            '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/2/set_quantity/${_articleID!}'),
+        // Send authorization headers to the backend.
+        headers: {
+          "content-type": "application/json",
+          HttpHeaders.authorizationHeader: 'Bearer ${dotenv.env['TOKEN']}',
+        },
+        body: jsonEncode(<String, int>{
+          'quantity': _quantity,
+        }));
+    log((response.body).toString());
   }
 
   factory Article.fromJson(Map<String, dynamic> json, int quantity) {

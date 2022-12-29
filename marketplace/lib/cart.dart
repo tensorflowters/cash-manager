@@ -20,18 +20,18 @@ class CartView extends StatefulWidget {
 class _CartViewState extends State<CartView> {
   late List<Article> savedItem = [];
   var simpleIntInput = 1;
-
-  void fetchArticle() async {
+  var lastItemsSize = 0;
+  fetchArticle() async {
     var response;
     try {
       response = await http.get(
         Uri.parse('${dotenv.env['PATH_HOST']!}/api/authenticated/cart'),
         // Send authorization headers to the backend.
         headers: {
-          HttpHeaders.authorizationHeader:
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjcyMzI1Mjg5LCJqdGkiOiIxZGU3ODY0OGIxNWM0OTNjYjU5YjhmNTc5OGNlNzdmNiIsInVzZXJfaWQiOjJ9.qDFk0FCnbd_w0IstlGqyYcSMjdXI57qEFIAYHNpLMGc',
+          HttpHeaders.authorizationHeader: 'Bearer ${dotenv.env['TOKEN']}',
         },
       );
+      log(response.toString());
     } catch (error) {
       log(error.toString());
     }
@@ -41,19 +41,50 @@ class _CartViewState extends State<CartView> {
     Map<String, dynamic> map = responseJson;
 
     List<dynamic> data = map["articles"];
+
     for (var i = 0; i < data.length; i++) {
       setState(() {
         savedItem
             .add(Article.fromJson(data[i]['article'], data[i]['quantity']));
       });
     }
-    print(savedItem);
+
+    if (data.length > 0) {
+      lastItemsSize = data.length;
+    }
+
+    setState(() {
+      if (data.length == 0 && data.length != lastItemsSize) {
+        savedItem = [];
+        data.length;
+      }
+    });
   }
 
   @override
   void initState() {
     this.fetchArticle();
     super.initState();
+  }
+
+  removeFromCart(id_article) async {
+    var response;
+    try {
+      response = await http.put(
+          Uri.parse(
+              '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/2/set_quantity/${id_article!}'),
+          // Send authorization headers to the backend.
+          headers: {
+            "content-type": "application/json",
+            HttpHeaders.authorizationHeader: 'Bearer ${dotenv.env['TOKEN']}',
+          },
+          body: jsonEncode(<String, int>{
+            'quantity': 0,
+          }));
+      await fetchArticle();
+    } catch (error) {
+      log(error.toString());
+    }
   }
 
   @override
@@ -131,18 +162,30 @@ class _CartViewState extends State<CartView> {
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
                                               IconButton(
-                                                iconSize: 20,
-                                                icon: const Icon(Icons.remove),
-                                                color: Colors.black,
-                                                tooltip:
-                                                    'Decrease quantity by 1',
-                                                onPressed: () {
-                                                  setState(() {
-                                                    savedItem[index]
-                                                        .setQuantity(-1);
-                                                  });
-                                                },
-                                              ),
+                                                  iconSize: 20,
+                                                  icon:
+                                                      const Icon(Icons.remove),
+                                                  color: Colors.black,
+                                                  tooltip:
+                                                      'Decrease quantity by 1',
+                                                  onPressed: () async {
+                                                    setState(() {
+                                                      savedItem[index]
+                                                          .setQuantity(-1);
+                                                    });
+                                                    log(savedItem[index]
+                                                        .getQuantity()
+                                                        .toString());
+                                                    if (await savedItem[index]
+                                                            .getQuantity() <=
+                                                        0) {
+                                                      await fetchArticle();
+                                                    } else {
+                                                      lastItemsSize =
+                                                          savedItem[index]
+                                                              .getQuantity();
+                                                    }
+                                                  }),
                                               Text(
                                                   style: TextStyle(
                                                     color: Colors.black,
@@ -159,6 +202,9 @@ class _CartViewState extends State<CartView> {
                                                     savedItem[index]
                                                         .setQuantity(1);
                                                   });
+                                                  lastItemsSize =
+                                                      savedItem[index]
+                                                          .getQuantity();
                                                 },
                                               ),
                                             ],
@@ -178,7 +224,10 @@ class _CartViewState extends State<CartView> {
                                       Container(
                                         child: IconButton(
                                           icon: Icon(Icons.close),
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            removeFromCart(
+                                                savedItem[index].getId());
+                                          },
                                         ),
                                       ),
                                       Container(

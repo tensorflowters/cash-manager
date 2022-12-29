@@ -1,11 +1,17 @@
+// ignore_for_file: unnecessary_new
+
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'dart:developer';
 import 'package:marketplace/article_pop_up.dart';
 import 'package:marketplace/Article.dart';
 import 'package:marketplace/main.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
 class QRViewExample extends StatefulWidget {
   const QRViewExample({Key? key}) : super(key: key);
@@ -69,6 +75,34 @@ class _QRViewExampleState extends State<QRViewExample> {
     setState(() {
       this.controller = controller;
     });
+
+    Widget _buildPopupDialog(BuildContext context, bool state) {
+      return new AlertDialog(
+        title: (state
+            ? const Text('Confirmation d\'ajout !')
+            : const Text('Erreur...')),
+        content: new Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            (state
+                ? const Text("Votre article à bien été ajouté au panier !")
+                : const Text(
+                    'Cette article n\'existe pas, veuillez en scanner un autre')),
+          ],
+        ),
+        actions: <Widget>[
+          new ElevatedButton(
+            onPressed: () {
+              controller.resumeCamera();
+              Navigator.of(context).pop("close");
+            },
+            child: const Text('Fermer'),
+          ),
+        ],
+      );
+    }
+
     controller.scannedDataStream.listen((scanData) {
       var ok = 0;
       setState(() {
@@ -77,13 +111,46 @@ class _QRViewExampleState extends State<QRViewExample> {
         debugPrint('movieTitle: ${_RandomWordsState._currentIndex}');
 
         _RandomWordsState.scanArticleId = result!.code.toString(); */
-        controller.pauseCamera();
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => MyWidget(
-                      result!.code.toString(),
-                    ))).then((value) => controller.resumeCamera());
+        var response = http
+            .get(Uri.parse(
+                '${dotenv.env['PATH_HOST']!}/api/articles/${result!.code.toString()}'))
+            .then(
+              (value) => {
+                controller.pauseCamera(),
+                if (value.statusCode == 200)
+                  {
+                    // ignore: use_build_context_synchronously
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MyWidget(
+                                  result!.code.toString(),
+                                ))).then((value) => {
+                          log((value.toString() == "Ok").toString()),
+                          if (value.toString() == "Ok")
+                            {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    _buildPopupDialog(context, true),
+                              )
+                            }
+                        }),
+                  }
+                else if (value.statusCode == 404)
+                  {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) =>
+                          _buildPopupDialog(context, false),
+                    ),
+                  }
+                else
+                  {
+                    throw Error(),
+                  }
+              },
+            );
       });
     });
   }
