@@ -26,10 +26,10 @@ Future<Article> decodeArticle(id) async {
   //print(retunObject);
 }
 
-void addToCart(id_article) async {
+addToCart(id_article) async {
   var response;
   try {
-    response = await http.get(
+    response = await http.post(
       Uri.parse(
           '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/2/add/${id_article!}'),
       // Send authorization headers to the backend.
@@ -38,6 +38,7 @@ void addToCart(id_article) async {
             'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjcyMzI1Mjg5LCJqdGkiOiIxZGU3ODY0OGIxNWM0OTNjYjU5YjhmNTc5OGNlNzdmNiIsInVzZXJfaWQiOjJ9.qDFk0FCnbd_w0IstlGqyYcSMjdXI57qEFIAYHNpLMGc',
       },
     );
+    log(response.toString());
   } catch (error) {
     log(error.toString());
   }
@@ -218,8 +219,8 @@ class _MyWidgetState extends State<MyWidget> {
                                     padding: EdgeInsets.all(20),
                                   ),
                                   child: Text('Ajouter au panier'),
-                                  onPressed: () => {
-                                    addToCart(widget.articleId),
+                                  onPressed: () async => {
+                                    await addToCart(widget.articleId),
                                     Navigator.pop(context)
                                   },
                                 ),
