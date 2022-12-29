@@ -2,11 +2,17 @@ version: "3.9"
 
 services:
 
-  apiservice:
+  db:
+    container_name: cash_manager_db
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=secretpassword
+    volumes:
+      - database_volume:/var/lib/postgresql/data
+
+  api:
     container_name: cash_manager_api
     build: .
-    depends_on:
-      - database
     environment:
       - SECRET_KEY=verysecretKey
       - DEBUG=0
@@ -18,40 +24,23 @@ services:
       - ALLOWED_HOSTS=*
       - HOSTNAME=$HOST
     command: make runproxyversion
+    depends_on:
+      - db
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
 
-  database:
-    container_name: cash_manager_database
-    image: postgres
-    restart: always
-    environment:
-      - POSTGRES_PASSWORD=secretpassword
-    volumes:
-      - database_volume:/var/lib/postgresql/data
-
-  nginx:
-    container_name: cash_manager_nginx
-    image: arm64v8/nginx:latest
+  server:
+    container_name: cash_manager_server
+    image: arm64v8/nginx:stable
     ports:
       - "80:80"
-      - "443:443"
+    depends_on:
+      - api
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
       - ./nginx/conf/:/etc/nginx/conf.d/:ro
-      - ./certbot/www/:/var/www/certbot/:ro
-      - ./certbot/conf/:/etc/nginx/ssl/:ro
-    depends_on:
-      - apiservice
-    restart: "always"
-
-  certbot:
-    image: certbot/certbot:arm64v8-v1.32.2
-    volumes:
-      - ./certbot/www/:/var/www/certbot/:rw
-      - ./certbot/conf/:/etc/letsencrypt/:rw
 
 volumes:
   database_volume:

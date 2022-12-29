@@ -13,4 +13,4 @@ RUN pip install --upgrade pip
 
 RUN make install
 
-EXPOSE 8000 
+EXPOSE 8000
