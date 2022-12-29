@@ -45,11 +45,20 @@ services:
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
     depends_on:
       - apiservice
-    restart: "on-failure"
+    restart: "always"
     networks:
       - nginx_network
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
 
 networks:
   nginx_network:
