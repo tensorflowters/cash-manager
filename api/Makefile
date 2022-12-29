@@ -23,7 +23,7 @@ runserver:
 	@python manage.py runserver ${HOST}:8000
 
 run_gunicorn:
-	@gunicorn --bind :8000 --workers 3 cash_manager.wsgi:application
+	@gunicorn cash_manager.wsgi:application --bind 0.0.0.0:8000
 
 collect:
 	@python manage.py collectstatic --no-input
