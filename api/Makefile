@@ -32,7 +32,7 @@ coverage:
 	@coverage xml
 
 docup:
-	@docker compose --env-file ./env up -d --build
+	@docker compose --env-file .env up -d --build
 
 docdown:
 	@docker compose down -v
