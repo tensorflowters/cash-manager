@@ -66,8 +66,7 @@ runserver:
 	@python manage.py runserver ${HOST}:8000
 
 run_gunicorn:
-	@gunicorn cash_manager.wsgi:application --bind 0.0.0.0:8000 --daemon
-	@nginx -g 'daemon off;'
+	@gunicorn --bind :8000 --workers 2 cash_manager.wsgi:application
 
 collect:
 	@python manage.py collectstatic --no-input
