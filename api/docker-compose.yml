@@ -14,15 +14,15 @@ services:
     container_name: cash_manager_api
     build: .
     environment:
-      - SECRET_KEY=verysecretKey
-      - DEBUG=0
-      - DB_NAME=postgres
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=secretpassword
-      - ALLOWED_HOSTS=*
-      - HOSTNAME=$HOST
+      - DEBUG=$DEBUG
+      - HOST=$HOST
+      - ALLOWED_HOSTS=$ALLOWED_HOSTS
+      - SECRET_KEY=$SECRET_KEY
+      - DB_NAME=$DB_NAME
+      - DB_HOST=$DB_HOST
+      - DB_PORT=$DB_PORT
+      - DB_USER=$DB_USER
+      - DB_PASSWORD=$DB_PASSWORD
     command: make runproxyversion
     depends_on:
       - db

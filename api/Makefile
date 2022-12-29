@@ -1,3 +1,6 @@
+docupdev:
+	@docker compose --env-file .env.dev up -d --build
+
 docup:
 	@docker compose --env-file .env up -d --build
 
