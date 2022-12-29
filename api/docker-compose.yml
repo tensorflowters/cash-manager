@@ -16,6 +16,7 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=secretpassword
       - ALLOWED_HOSTS=*
+      - HOSTNAME=$HOST
     command: make runproxyversion
     networks:
       - nginx_network
@@ -40,6 +41,7 @@ services:
     build: ./nginx
     ports:
       - "8000:80"
+      - "8000:443"
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media

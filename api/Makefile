@@ -1,6 +1,6 @@
-include .env
-
 .PHONY: help
+
+HOST = ${HOSTNAME}
 
 help:
 	@echo "cash_manager Projects"
@@ -32,7 +32,7 @@ coverage:
 	@coverage xml
 
 docup:
-	@docker compose up -d --build
+	@docker compose --env-file ./env up -d --build
 
 docdown:
 	@docker compose down -v
