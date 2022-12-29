@@ -34,7 +34,7 @@ services:
     container_name: cash_manager_server
     image: arm64v8/nginx:stable
     ports:
-      - "80:80"
+      - "8000:80"
     depends_on:
       - api
     volumes:
