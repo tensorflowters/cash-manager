@@ -1,11 +1,20 @@
-docupdev:
-	@docker compose --env-file .env.dev up -d --build
-
-docup:
+buildserver:
 	@docker compose --env-file .env up -d --build
 
-docdown:
+downserver:
 	@docker compose down -v
+
+buildprod:
+	@docker-compose -f docker-compose.prod.local.yml --env-file .env.prod.local up -d --build
+
+downprod:
+	@docker-compose -f docker-compose.prod.local.yml down -v
+
+builddev:
+	@docker-compose -f docker-compose.dev.yml up -d --build
+
+downdev:
+	@docker-compose -f docker-compose.dev.yml down -v
 
 migration:
 	@python manage.py makemigrations
