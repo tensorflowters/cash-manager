@@ -45,6 +45,7 @@ services:
       - ./nginx/prod-local-conf/:/etc/nginx/conf.d/:ro
       - /etc/letsencrypt:/etc/letsencrypt
       - /var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./certs/:/etc/letsencrypt/live/cash-manager.fr/
       - /var/www/html:/var/www/html
 
 volumes:
