@@ -52,3 +52,14 @@ docker-compose -f docker-compose.local.yml -p cash_manager exec api_dev python m
 docker-compose -f docker-compose.local.yml -p cash_manager exec api_dev python manage.py migrate
 ```
 <p>&nbsp;</p>
+
+# Générations certificat
+
+```bash
+docker run -it --rm -p 80:80 --name certbot \
+-v "/etc/letsencrypt:/etc/letsencrypt" \
+-v "/var/lib/letsencrypt:/var/lib/letsencrypt" \
+-v "/var/www/html/:/var/www/html/" \
+certbot/certbot:arm64v8-v1.32.2 certonly -a webroot -w /var/www/html/ -i nginx --redirect --hsts 
+--agree-tos --no-eff-email --staple-ocsp -d cash-manager.fr --dry-run
+```
