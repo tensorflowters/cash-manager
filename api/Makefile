@@ -2,12 +2,14 @@ buildserver:
 	@docker compose --env-file .env up -d --build
 
 downserver:
+	@docker compose stop
 	@docker compose down -v
 
 buildprod:
 	@docker-compose -f docker-compose.prod.local.yml --env-file .env.prod.local up -d --build
 
 downprod:
+	@docker compose stop
 	@docker-compose -f docker-compose.prod.local.yml down -v
 
 builddev:

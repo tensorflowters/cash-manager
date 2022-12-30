@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
 
-  db:
+  postgres_db:
     container_name: cash_manager_db
     image: postgres
     environment:
@@ -10,7 +10,7 @@ services:
     volumes:
       - database_volume:/var/lib/postgresql/data
 
-  api:
+  django_api:
     container_name: cash_manager_api
     build: .
     environment:
@@ -25,23 +25,27 @@ services:
       - DB_PASSWORD=$DB_PASSWORD
     command: make runproxyversion
     depends_on:
-      - db
+      - postgres_db
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
 
-  server:
+  nginx_server:
     container_name: cash_manager_server
-    image: arm64v8/nginx:stable
+    image: arm64v8/nginx:1.20.2
     ports:
-      - "8000:80"
+      - "80:80"
+      - "8000:443"
+    restart: "always"
     depends_on:
-      - api
+      - django_api
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
       - ./nginx/conf/:/etc/nginx/conf.d/:ro
-      - /var/www/html/:/var/www/html/
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+      - /var/www/html:/var/www/html
 
 volumes:
   database_volume:
