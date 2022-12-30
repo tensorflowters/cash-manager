@@ -41,6 +41,7 @@ services:
       - static_volume:/app/static
       - media_volume:/app/media
       - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - /var/www/html/:/var/www/html/
 
 volumes:
   database_volume:
