@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.conf import settings
 from django.urls import path, include
 from rest_framework import routers, permissions
 from drf_yasg.views import get_schema_view
@@ -20,6 +21,7 @@ from store.views import StripeView
 from store.views import StripeSessionView
 from store.views import TestStripeView
 
+
 schema_view = get_schema_view(
    openapi.Info(
       title="Cash manager API",
@@ -30,7 +32,7 @@ schema_view = get_schema_view(
       license=openapi.License(name="Cash manager License"),
    ),
    public=True,
-   permission_classes=(permissions.AllowAny,),
+   url=settings.API_BASE_URL,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)

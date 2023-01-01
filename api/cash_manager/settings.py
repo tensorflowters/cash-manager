@@ -13,7 +13,8 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
 
 CORS_ALLOWED_ORIGINS = []
 
-CSRF_TRUSTED_ORIGINS = []
+API_BASE_URL=os.getenv("BASE_URL")
+
 
 DATABASES = {
     "default": {
@@ -148,8 +149,13 @@ AUTH_USER_MODEL = 'authentication.User'
 
 SWAGGER_SETTINGS =  {
     'SECURITY_DEFINITIONS': {
-        'basic': {
+        'Basic': {
             'type': 'basic'
+        },
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
         }
     },
     'TAGS_SORTER': 'alpha',

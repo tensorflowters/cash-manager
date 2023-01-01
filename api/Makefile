@@ -6,7 +6,8 @@ downserver:
 	@docker compose down -v
 
 buildprod:
-	@docker-compose -f docker-compose.prod.local.yml --env-file .env.prod.local up -d --build
+	@docker-compose -f docker-compose.prod.local.yml --env-file .env.prod.local build --no-cache
+	@docker-compose -f docker-compose.prod.local.yml --env-file .env.prod.local up -d
 
 downprod:
 	@docker compose stop
