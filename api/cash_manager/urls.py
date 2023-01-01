@@ -35,7 +35,7 @@ schema_view = get_schema_view(
    url=settings.API_BASE_URL,
 )
 
-router = routers.DefaultRouter(trailing_slash=False)
+router = routers.SimpleRouter(trailing_slash=False)
 
 # Public routes for authentication
 router.register('api/register', RegisterViewset, basename='authentication-register')
@@ -68,7 +68,7 @@ router.register('api/admin/articles', ArticleViewset, basename='admin-article')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api/refresh', RefreshView.as_view(), name='token_refresh'),
     path('stripe-pk/', StripeView.as_view(), name='stripe'),
     path('stripe-session/', StripeSessionView.as_view(), name='stripe-session'),
