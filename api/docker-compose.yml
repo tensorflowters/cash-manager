@@ -24,7 +24,7 @@ services:
       - DB_USER=$DB_USER
       - DB_PASSWORD=$DB_PASSWORD
       - BASE_URL=$BASE_URL
-    command: python ./api/manage.py collectstatic --no-input && python ./api/manage.py makemigrations && python ./api/manage.py migrate && gunicorn ./api/cash_manager.wsgi:application --bind 0.0.0.0:8000
+    command: ./api/make runproxyversion
     depends_on:
       - postgres_db
     volumes:
