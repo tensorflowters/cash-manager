@@ -24,7 +24,7 @@ services:
       - DB_USER=$DB_USER
       - DB_PASSWORD=$DB_PASSWORD
       - BASE_URL=$BASE_URL
-    command: ./api/make runproxyversion
+    command: make runproxyversion
     depends_on:
       - postgres_db
     volumes:
