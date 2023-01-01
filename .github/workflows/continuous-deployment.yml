@@ -33,7 +33,7 @@ jobs:
         run: docker compose -f ./api/docker-compose.yml --env-file ./api/.env build --no-cache
 
       - name: Stop Old Docker Compose Environment
-        run: docker compose stop
+        run: docker compose -f ./api/docker-compose.yml stop
 
       - name: Run Updated Docker Compose Environment
         run: docker compose -f ./api/docker-compose.yml --env-file ./api/.env up -d
