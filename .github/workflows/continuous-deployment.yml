@@ -29,24 +29,23 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/cash_manager:latest
 
-      - name: Build Updated Docker Compose Environment
-        run: docker compose -f docker-compose.yml --env-file .env build --no-cache
-        with:
-          context: ./api/
-
       - name: Stop Old Docker Compose Environment
-        run: docker compose -f docker-compose.yml stop
-        with:
-          context: ./api/
+        run:  |
+          cd ./api
+          docker compose -f docker-compose.yml stop
+
+      - name: Build Updated Docker Compose Environment
+        run: |
+          cd ./api
+          docker compose -f docker-compose.yml --env-file .env build --no-cache
 
       - name: Run Updated Docker Compose Environment
-        run: docker compose -f docker-compose.yml --env-file .env up -d
-        with:
-          context: ./api/
+        run: |
+          cd ./api
+          docker compose -f docker-compose.yml --env-file .env up -d
 
       - name: Remove Unused Docker Compose Environment
         run: |
+          cd ./api
           docker container prune -f
           docker image prune -f
-        with:
-          context: ./api/

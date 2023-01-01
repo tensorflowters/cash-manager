@@ -12,7 +12,7 @@ services:
 
   django_api:
     container_name: cash_manager_api
-    image: abequie/cash_manager:latest
+    build: .
     environment:
       - DEBUG=$DEBUG
       - HOST=$HOST
