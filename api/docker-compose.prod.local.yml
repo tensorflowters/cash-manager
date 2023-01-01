@@ -10,6 +10,18 @@ services:
     volumes:
       - database_volume:/var/lib/postgresql/data
 
+  postgres_admin:
+    container_name: cash_manager_db_admin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+    restart: unless-stopped
+    ports:
+      - "5555:80"
+    depends_on:
+      - postgres_db
+
   django_api:
     container_name: cash_manager_api
     build: .

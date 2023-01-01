@@ -1,24 +1,22 @@
-from rest_framework import mixins
-from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
-from rest_framework.views import APIView
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema
-from django.shortcuts import redirect
-from django.db.models.query import EmptyQuerySet
-from django.db.models import Q
-from django.core.exceptions import ObjectDoesNotExist
+import os
+import stripe
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import mixins
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
 from store.models import Category, Product, Article, Cart, CartArticle
 from store.serializers import CategoryDetailSerializer, CategoryListSerializer,\
-	ProductDetailSerializer, ProductSerializer, ArticleSerializer, ArticleDetailSerializer, CartSerializer, CartArticleSerializer
-import os
-import stripe
+															ProductDetailSerializer, ProductSerializer, ArticleSerializer,\
+															ArticleDetailSerializer, CartSerializer, CartArticleSerializer
 
 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
@@ -195,40 +193,81 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 						raise NotFound('No article found', code='not_found')
 
 					elif not cart_articles.exists():
-						CartArticle.objects.create(
-							article=article.first(), 
-							cart=cart,
-							quantity=1
-						)
-						updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart_user_id)
-						serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
-						return Response({ "message": "Article added to cart with success", 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
+						if request.data.get("quantity") is not None:
+							
+							quantity_validation = Article.validate_quantity(article.first(), request.data.get("quantity"), False)
+
+							if quantity_validation["is_valid"]:
+
+									CartArticle.objects.create(
+										article=article.first(), 
+										cart=cart,
+										quantity=request.data.get("quantity")
+									)
+
+									updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart_user_id)
+									serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
+
+									return Response({ "message": "Article added to cart with success", 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
+
+							else:
+
+								raise ParseError(quantity_validation["message"], code='parse_error')
+
+						else:
+
+								CartArticle.objects.create(
+									article=article.first(), 
+									cart=cart,
+									quantity=1
+								)
+
+								updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart_user_id)
+								serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
+
+								return Response({ "message": "Article added to cart with success", 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
 
 					else:
 						cart_article = cart_articles.filter(article=article.first())
+						new_quantity = 1
+						
+						if request.data.get("quantity") is not None:
+
+							new_quantity = request.data.get("quantity")
 
 						if cart_article.exists():
+
 							cart_article_id = cart_article.first().id
 							quantity = cart_article.first().quantity
-							new_quantity =  quantity + 1
-							CartArticle.objects.filter(pk=cart_article_id).update(quantity=new_quantity)
-							updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart.id)
-							serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
+							quantity_validation = Article.validate_quantity(article.first(), new_quantity, True)
+							
+							if quantity_validation["is_valid"]:
 
-							return Response({ "message": "Article quantity updated with success", 'cart': serialized_cart }, status=status.HTTP_200_OK)
+								new_quantity =  quantity + new_quantity
+								CartArticle.objects.filter(pk=cart_article_id).update(quantity=new_quantity)
+								updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart.id)
+								serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
+
+								return Response({ "message": "Article quantity updated with success", 'cart': serialized_cart }, status=status.HTTP_200_OK)
+							
+							else:
+
+								raise ParseError(quantity_validation["message"], code='parse_error')
 
 						else:
+
 							CartArticle.objects.create(
 								article=article.first(), 
 								cart=cart,
-								quantity=1
+								quantity=new_quantity
 							)
+							
 							updated_cart = CartArticle.objects.calculate_total_amount(cart_id=cart_user_id)
 							serialized_cart = Cart.get_articles(updated_cart, self.serializer_class, CartArticleSerializer)
 
 							return Response({ "message": "Article added to cart with success", 'cart': serialized_cart }, status=status.HTTP_201_CREATED)
-								
+							
 			else:
 				raise PermissionDenied
 

@@ -3,8 +3,8 @@ djangorestframework==3.14.0
 djangorestframework-simplejwt==4.7.2
 drf-standardized-errors
 drf-yasg
-psycopg2
-stripe==2.55.1
-python-dotenv==0.21.0 
 gunicorn
+psycopg2
+python-dotenv==0.21.0 
+stripe==2.55.1
 whitenoise==6.2.0
