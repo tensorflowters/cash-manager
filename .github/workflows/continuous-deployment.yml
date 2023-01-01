@@ -25,7 +25,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./api/
-          file: Dockerfile.prod
+          file: ./api/Dockerfile.prod
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/cash_manager:latest
 
