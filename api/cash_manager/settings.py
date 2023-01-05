@@ -16,12 +16,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LANGUAGE_CODE = 'en-us'
 ROOT_URLCONF = 'cash_manager.urls'
 SECRET_KEY = os.getenv("SECRET_KEY")
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = True
+if DEBUG == 0:
+    from cash_manager.settings_prod import *
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STRIPE_ACCESS_KEY = os.environ.get("STRIPE_ACCESS_KEY")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True

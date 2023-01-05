@@ -9,6 +9,9 @@ from authentication.views import LogoutViewset
 from authentication.views import RefreshView
 from authentication.views import AuthenticatedUserViewset
 from authentication.views import AdminUserViewset
+from bank_server.views import StripeView
+from bank_server.views import StripeSessionView
+from bank_server.views import TestStripeView
 from store.views import ReadOnlyCategoryViewset
 from store.views import ReadOnlyProductViewset
 from store.views import ReadOnlyArticleViewset
@@ -16,9 +19,6 @@ from store.views import ProductViewset
 from store.views import CategoryViewset
 from store.views import ArticleViewset
 from store.views import CartViewset
-from store.views import StripeView
-from store.views import StripeSessionView
-from store.views import TestStripeView
 
 
 schema_view = get_schema_view(

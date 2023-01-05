@@ -1,11 +1,21 @@
 #syntax=docker/dockerfile:1
 FROM python:3
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+
 WORKDIR /api
+
 COPY requirements.txt /api/
+
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-COPY . /api/
-RUN chmod +x entrypoint.sh
-CMD ["./dev.sh"]
+
+COPY ./authentication /api/
+COPY ./cash_manager /api/
+COPY ./store /api/
+COPY ./templates /api/
+COPY ./manage.py /api/
+COPY ./requirements.txt /api/
+
+EXPOSE 8002
