@@ -1,73 +1,109 @@
 import stripe
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import mixins
+from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from store.models import Article
-from store.serializers import ArticleSerializer
+from rest_framework.viewsets import GenericViewSet
+from store.models import Cart
+from store.serializers import CartSerializer, CartArticleSerializer
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-class TestStripeView(APIView):
-    def post(self, request):
-        try:
-            test_payment_intent = stripe.PaymentIntent.create(
-                amount=1000, currency='pln', 
-                payment_method_types=['card'],
-                receipt_email='test@example.com')
-            return Response(test_payment_intent)
-        except Exception as e:
-          # Invalid parameters were supplied to Stripe's API
-          return Response({"error": e.user_message})
+
+@method_decorator(name="get", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+class CheckoutSuccessView(APIView):
+
+	renderer_classes = [TemplateHTMLRenderer]
+	template_name = 'success.html'
+
+	@swagger_auto_schema(tags=["Authenticated payments"])
+	def get(self, request):
+		return Response({}, status=status.HTTP_200_OK)
 
 
-class StripeView(APIView):
-    def get(self, request):
-        config = {"stripe_pk": settings.STRIPE_SECRET_KEY}
-        return Response(config)
+@method_decorator(name="get", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+class CheckoutFailureView(APIView):
+
+	renderer_classes = [TemplateHTMLRenderer]
+	template_name = 'failure.html'
+
+	@swagger_auto_schema(tags=["Authenticated payments"])
+	def get(self, request):
+		return Response({"LANDING_URL": f'{settings.API_BASE_URL}/api/authenticated/cart-checkout/landing'}, status=status.HTTP_200_OK)
 
 
-class StripeSessionView(APIView):
-    def post(self, request):
-        article = Article.objects.get(pk=1)
-        serializer_class = ArticleSerializer(article)
-        pay_data = {
-            # "price": serializer_class.data['stripe_price_id'],     
-            "price": 1000,     
-            "quantity": 1,
-        }
-        checkout_session = stripe.checkout.Session.create(
-                success_url=f"{settings.API_BASE_URL}/success",
-                cancel_url=f"{settings.API_BASE_URL}/cancel",
-                payment_method_types=['card'],
-                mode='payment',
-                line_items=[
-                    pay_data,
-                ]
-        )
-        return redirect(checkout_session.url)
+@method_decorator(name="get", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+class CheckoutLandingView(APIView):
 
-class SuccessView(APIView):
-    renderer_classes = (TemplateHTMLRenderer,)
+	serializer_class = CartSerializer
+	renderer_classes = [TemplateHTMLRenderer]
+	template_name = 'failure.html'
 
-    def get(self, request):
-        return Response(template_name='success.html')
+	@swagger_auto_schema(tags=["Authenticated payments"])
+	def get(self, request):
+		cart = Cart.objects.all().filter(user=request.user).first()
+		serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+		return Response({'cart': serialized_cart, 'CHECKOUT_SESSION_URL': settings.CHECKOUT_SESSION_URL },status=status.HTTP_200_OK, template_name='landing.html')
 
 
-class FailureView(APIView):
-    renderer_classes = (TemplateHTMLRenderer,)
+@method_decorator(name="list", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+class CheckoutSessionViewset(mixins.ListModelMixin, GenericViewSet):
 
-    def get(self, request):
-        return Response(template_name='failure.html')
+	serializer_class = CartSerializer
+	queryset = Cart.objects.all()
+
+	@method_decorator(csrf_exempt)
+	@swagger_auto_schema(tags=["Authenticated payments"])
+	def list(self, request):
+		queryset = self.queryset.filter(user=request.user)
+
+		if queryset.exists():
+			cart = queryset.first()
+			serialized_cart = Cart.get_articles(cart, self.serializer_class, CartArticleSerializer)
+			pay_data = []
+
+			for art in serialized_cart["articles"]:
+				pay_data.append({
+					"price_data": {
+						"currency": "usd",
+						"product_data": {
+							"name": art["article"]["name"],
+							"images": [art["article"]["url"]]
+						},
+						"unit_amount": round(round(float(art["article"]["price"]), 2) * 100) ## In cents,
+					},
+					"quantity": art["quantity"]
+				})
+
+			if len(pay_data) > 0:
+
+				checkout_session = stripe.checkout.Session.create(
+					line_items=pay_data,
+					mode="payment",
+					success_url=f"{settings.API_BASE_URL}/api/authenticated/cart-checkout/success",
+					cancel_url=f"{settings.API_BASE_URL}/api/authenticated/cart-checkout/failure",
+				)
+
+				return redirect(checkout_session.url, code=303)
+
+			else:
+				raise NotFound('No article in cart', code='not_found')
+		
+		else:
+			raise NotFound('No cart found', code='not_found')
 
 
-class LandingView(APIView):
-    renderer_classes = [TemplateHTMLRenderer]
+class OrderManagerView(APIView):
 
-    def get(self, request):
-        article = Article.objects.get(name="Test Product")
-        serializer_class = ArticleSerializer(article)
-        print(serializer_class.data['stripe_price_id'])
-        return Response({'article': article }, template_name='landing.html')
+	def get(self, request):
+
+		return Response({"webhook": request.data}, status=status.HTTP_200_OK)

@@ -1,5 +1,6 @@
 import os
 import stripe
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -144,10 +145,10 @@ class ArticleViewset(ModelViewSet):
 		return queryset
 
 
-@method_decorator(name="list", decorator=login_required(login_url='/api/login'))
-@method_decorator(name="add_article", decorator=login_required(login_url='/api/login'))
-@method_decorator(name="remove_article", decorator=login_required(login_url='/api/login'))
-@method_decorator(name="set_quantity_article", decorator=login_required(login_url='/api/login'))
+@method_decorator(name="list", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+@method_decorator(name="add_article", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+@method_decorator(name="remove_article", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+@method_decorator(name="set_quantity_article", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
 class CartViewset(mixins.ListModelMixin, GenericViewSet):
 
 	serializer_class = CartSerializer

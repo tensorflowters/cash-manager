@@ -46,6 +46,7 @@ services:
       - DB_PASSWORD=postgres
       - STRIPE_ACCESS_KEY=pk_test_51LPMfhIbRIIuyxdN3KmXxQizkeC4HSdn3zJ6VPlXXm3UH0hvMxCUuuU5le7NbrIsm3yqndMD3vL43wQsVQwocvcC00UN0jGFNU
       - STRIPE_SECRET_KEY=sk_test_51LPMfhIbRIIuyxdNOQc2dE3FIIea3BTuJP5BPm9k6zuFXf3PtEvbfD82suBndYTYCted1bcZ5l7Jx359taiRgpHs00uuxbgIvL
+      - CHECKOUT_SESSION_URL=http://localhost:8002/api/authenticated/cart-checkout
     depends_on:
       - db_dev
 
