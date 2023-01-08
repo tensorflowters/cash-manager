@@ -10,6 +10,8 @@ import 'package:quantity_input/quantity_input.dart';
 import 'package:http/http.dart' as http;
 import 'package:marketplace/Article.dart';
 
+var cartValide = false;
+
 class CartView extends StatefulWidget {
   const CartView({super.key});
 
@@ -21,6 +23,7 @@ class _CartViewState extends State<CartView> {
   late List<Article> savedItem = [];
   var simpleIntInput = 1;
   var lastItemsSize = 0;
+
   fetchArticle() async {
     var response;
     try {
@@ -39,7 +42,7 @@ class _CartViewState extends State<CartView> {
     final responseJson = jsonDecode(response.body);
 
     Map<String, dynamic> map = responseJson;
-
+    log(map.toString());
     List<dynamic> data = map["articles"];
 
     for (var i = 0; i < data.length; i++) {
@@ -51,6 +54,9 @@ class _CartViewState extends State<CartView> {
 
     if (data.length > 0) {
       lastItemsSize = data.length;
+      cartValide = true;
+    } else {
+      cartValide = false;
     }
 
     setState(() {
@@ -257,13 +263,18 @@ class _CartViewState extends State<CartView> {
                               EdgeInsets.all(15)),
                           maximumSize:
                               MaterialStateProperty.all(const Size(200, 100)),
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.green[400]),
+                          backgroundColor: cartValide
+                              ? MaterialStateProperty.all(Colors.green[400])
+                              : MaterialStateProperty.all(Colors.grey[400]),
                           foregroundColor:
                               MaterialStateProperty.all(Colors.white),
                           textStyle: MaterialStateProperty.all(
                               TextStyle(fontSize: 20, color: Colors.white))),
-                      onPressed: () {},
+                      onPressed: cartValide
+                          ? () {
+                              print('Submit');
+                            }
+                          : null,
                       child: Text('Valider le panier'),
                     )
                   ]))

@@ -107,6 +107,7 @@ class _QRViewExampleState extends State<QRViewExample> {
       var ok = 0;
       setState(() {
         result = scanData;
+        controller.pauseCamera();
         /* _RandomWordsState._currentIndex = 2;
         debugPrint('movieTitle: ${_RandomWordsState._currentIndex}');
 
@@ -116,7 +117,7 @@ class _QRViewExampleState extends State<QRViewExample> {
                 '${dotenv.env['PATH_HOST']!}/api/articles/${result!.code.toString()}'))
             .then(
               (value) => {
-                controller.pauseCamera(),
+                log(value.toString()),
                 if (value.statusCode == 200)
                   {
                     // ignore: use_build_context_synchronously

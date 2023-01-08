@@ -53,7 +53,7 @@ class Article {
 
     var response = await http.put(
         Uri.parse(
-            '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/2/set_quantity/${_articleID!}'),
+            '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/2/set_quantity/${_articleID}'),
         // Send authorization headers to the backend.
         headers: {
           "content-type": "application/json",
