@@ -1,0 +1,54 @@
+version: '3.9'
+services:
+
+  db_dev:
+    image: 'postgres:latest'
+    environment:
+      - PGDATA=var/lib/postgresql/data/pgdata
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: unless-stopped
+    volumes:
+      - 'pgdata:/var/lib/postgresql/data'
+      - '../db/init.sql:/docker-entrypoint-initdb.d/init.sql'
+
+  admin_dev:
+    image: 'dpage/pgadmin4'
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.org
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    restart: unless-stopped
+    ports:
+      - '5555:80'
+    depends_on:
+      - db_dev
+
+  api_dev:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    command: 'python manage.py runserver 0.0.0.0:8002'
+    volumes:
+      - '.:/api'
+    ports:
+      - '8002:8002'
+    environment:
+      - ALLOWED_HOSTS=*
+      - BASE_URL=http://localhost:8002
+      - HOST=localhost
+      - DEBUG=1
+      - SECRET_KEY=mysecretkey
+      - DB_NAME=postgres
+      - DB_HOST=db_dev
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - STRIPE_ACCESS_KEY=pk_test_51MNC0fJWka2ehDVl346w7PsDtVrzCgIp1IMm9TNA38GNq0SU3qE17lT4Uq9LTYkjhvWR5GkdU4jxLPkaS9MCVO5B00J7FTTTeF
+      - STRIPE_SECRET_KEY=sk_test_51MNC0fJWka2ehDVl4Ue3AtB3aS0ChSloIEUMLRdB08ZcxBBDf43EfcZqKzza0s0KJL2c3eOCvVXxP4qkaEWrBrx300yq1DNswg
+      - CHECKOUT_SESSION_URL=http://localhost:8002/api/authenticated/cart-checkout
+    depends_on:
+      - db_dev
+
+volumes:
+  pgdata:

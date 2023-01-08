@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:marketplace/Article.dart';
 import 'package:marketplace/Product.dart';
 import 'package:marketplace/qrcode.dart';
 import 'package:marketplace/cart.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:marketplace/login_screen.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:http/http.dart' as http;
 import 'User.dart';
@@ -85,11 +88,19 @@ class _MyAppState extends State<MyApp> {
     //fetchCategoryList();
   }
 
+  Future<String?> accesToken() async {
+    final storage = new FlutterSecureStorage();
+    String? accessToken = await storage.read(key: "accessToken");
+
+    return accessToken.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
+
           // This is the theme of your application.
           //
           // Try running your application with "flutter run". You'll see the
@@ -108,6 +119,7 @@ class _MyAppState extends State<MyApp> {
         selectedIndex: widget.selectexIndex,
         categoryList: widget.categoryList,
       ),
+
       // Start the app with the "/" named route. In this case, the app starts
       // on the FirstScreen widget.
       //initialRoute: '/',
