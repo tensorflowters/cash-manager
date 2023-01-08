@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:marketplace/Article.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:quantity_input/quantity_input.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,20 +23,37 @@ Future<Article> decodeArticle(id, context) async {
 }
 
 addToCart(id_article) async {
-  var response;
+  final storage = const FlutterSecureStorage();
+  var cartResponse;
   try {
-    response = await http.post(
-      Uri.parse(
-          '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/2/add/${id_article!}'),
+    cartResponse = await http.get(
+      Uri.parse('${dotenv.env['PATH_HOST']!}/api/authenticated/cart'),
       // Send authorization headers to the backend.
       headers: {
-        HttpHeaders.authorizationHeader: 'Bearer ${dotenv.env['TOKEN']}',
+        HttpHeaders.authorizationHeader:
+            'Bearer ${await storage.read(key: 'accessToken')}',
       },
     );
   } catch (error) {
     log(error.toString());
   }
+  log(jsonDecode(cartResponse.body).toString());
 
+  var response;
+  try {
+    response = await http.post(
+      Uri.parse(
+          '${dotenv.env['PATH_HOST']!}/api/authenticated/cart/${jsonDecode(cartResponse.body)['id']}/add/${id_article!}'),
+      // Send authorization headers to the backend.
+      headers: {
+        HttpHeaders.authorizationHeader:
+            'Bearer ${await storage.read(key: 'accessToken')}',
+      },
+    );
+  } catch (error) {
+    log(error.toString());
+  }
+  log(jsonDecode(response.body).toString());
   final responseJson = jsonDecode(response.body);
 }
 
@@ -121,14 +140,17 @@ class _MyWidgetState extends State<MyWidget> {
                                     top: 10.0,
                                     bottom: 0),
                                 child: Container(
-                                  child: Text(
-                                    snapshot.data!.getArticleName(),
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey[800],
-                                        fontSize: 30),
-                                  ),
-                                ),
+                                    height: 50,
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.vertical,
+                                      child: Text(
+                                        snapshot.data!.getArticleName(),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey[800],
+                                            fontSize: 20),
+                                      ),
+                                    )),
                               ),
                             ),
                             Align(
@@ -214,6 +236,7 @@ class _MyWidgetState extends State<MyWidget> {
                                       ),
                                       child: Text('Ajouter au panier'),
                                       onPressed: () async => {
+                                        log(widget.articleId.toString()),
                                         addToCart(widget.articleId),
                                         Navigator.pop(context, "Ok")
                                       },

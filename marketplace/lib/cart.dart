@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -20,6 +21,8 @@ class CartView extends StatefulWidget {
 }
 
 class _CartViewState extends State<CartView> {
+  final storage = const FlutterSecureStorage();
+
   late List<Article> savedItem = [];
   var simpleIntInput = 1;
   var lastItemsSize = 0;
@@ -31,7 +34,8 @@ class _CartViewState extends State<CartView> {
         Uri.parse('${dotenv.env['PATH_HOST']!}/api/authenticated/cart'),
         // Send authorization headers to the backend.
         headers: {
-          HttpHeaders.authorizationHeader: 'Bearer ${dotenv.env['TOKEN']}',
+          HttpHeaders.authorizationHeader:
+              'Bearer ${await storage.read(key: 'accessToken')}',
         },
       );
       log(response.toString());
@@ -138,7 +142,7 @@ class _CartViewState extends State<CartView> {
                                           '${savedItem[index].getUrl()}'),
                                     ))),
                             Expanded(
-                                flex: 3,
+                                flex: 2,
                                 child: Container(
                                     child: Column(
                                         mainAxisAlignment:
@@ -150,7 +154,7 @@ class _CartViewState extends State<CartView> {
                                           style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               color: Colors.grey[900],
-                                              fontSize: 18),
+                                              fontSize: 12),
                                           textAlign: TextAlign.left,
                                           savedItem[index].getArticleName()),
                                       Container(
@@ -242,7 +246,10 @@ class _CartViewState extends State<CartView> {
                                                 fontWeight: FontWeight.w600,
                                                 color: Colors.grey[900],
                                                 fontSize: 16),
-                                            "10€"),
+                                            savedItem[index]
+                                                    .getPrice()
+                                                    .toString() +
+                                                "€"),
                                       )
                                     ],
                                   )),

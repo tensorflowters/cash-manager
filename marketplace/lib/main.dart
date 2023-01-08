@@ -112,13 +112,14 @@ class _MyAppState extends State<MyApp> {
           // is not restarted.
           //primarySwatch: Colors.blue,
           ),
-      home: MyHomePage(
+      /*  home: MyHomePage(
         title: 'dsq',
         savedItem: widget.savedItem,
         user: widget.currentUser,
         selectedIndex: widget.selectexIndex,
         categoryList: widget.categoryList,
-      ),
+      ), */
+      home: LoginScreen(),
 
       // Start the app with the "/" named route. In this case, the app starts
       // on the FirstScreen widget.

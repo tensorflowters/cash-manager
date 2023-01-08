@@ -3,11 +3,15 @@ import 'dart:developer';
 import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/cupertino.dart';
 
 class Article {
+  final storage = const FlutterSecureStorage();
+
   late int _articleID;
   late String _articleName;
   late String _url;
@@ -57,7 +61,8 @@ class Article {
         // Send authorization headers to the backend.
         headers: {
           "content-type": "application/json",
-          HttpHeaders.authorizationHeader: 'Bearer ${dotenv.env['TOKEN']}',
+          HttpHeaders.authorizationHeader:
+              'Bearer ${await storage.read(key: 'accessToken')}',
         },
         body: jsonEncode(<String, int>{
           'quantity': _quantity,
