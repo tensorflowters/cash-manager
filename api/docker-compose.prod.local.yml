@@ -8,7 +8,8 @@ services:
     environment:
       - POSTGRES_PASSWORD=secretpassword
     volumes:
-      - database_volume:/var/lib/postgresql/data
+      - 'database_volume:/var/lib/postgresql/data'
+      - '../db/init.sql:/initdb/init.sql'
 
   postgres_admin:
     container_name: cash_manager_db_admin
@@ -36,6 +37,9 @@ services:
       - DB_USER=$DB_USER
       - DB_PASSWORD=$DB_PASSWORD
       - BASE_URL=$BASE_URL
+      - CHECKOUT_SESSION_URL=$CHECKOUT_SESSION_URL
+      - STRIPE_ACCESS_KEY=$STRIPE_ACCESS_KEY
+      - STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
     command: make runproxyversion
     depends_on:
       - postgres_db

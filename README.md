@@ -63,3 +63,10 @@ docker run -it --rm -p 80:80 --name certbot \
 certbot/certbot:arm64v8-v1.32.2 certonly -a webroot -w /var/www/html/ -i nginx --redirect --hsts 
 --agree-tos --no-eff-email --staple-ocsp -d cash-manager.fr --dry-run
 ```
+
+<p>&nbsp;</p>
+
+# Insérer un script sql
+```bash
+docker-compose -f docker-compose.dev.yml exec -u postgresuser containername psql dbname postgresuser -f /docker-entrypoint-initdb.d/init.sql
+```

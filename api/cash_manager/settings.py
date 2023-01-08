@@ -10,22 +10,27 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
 API_BASE_URL=os.getenv("BASE_URL")
 AUTH_PROFILE_MODULE = 'authentication.User'
 AUTH_USER_MODEL = 'authentication.User'
+CHECKOUT_SESSION_URL=os.getenv("CHECKOUT_SESSION_URL")
 CORS_ALLOWED_ORIGINS = []
 DEBUG = int(os.environ.get("DEBUG", default=0))
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LANGUAGE_CODE = 'en-us'
 ROOT_URLCONF = 'cash_manager.urls'
 SECRET_KEY = os.getenv("SECRET_KEY")
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = True
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STRIPE_ACCESS_KEY = os.environ.get("STRIPE_ACCESS_KEY")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 WSGI_APPLICATION = 'cash_manager.wsgi.application'
+
+
+if DEBUG == 0:
+    from cash_manager.settings_prod import *
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -80,6 +85,11 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework.renderers.TemplateHTMLRenderer',
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication'],
     'EXCEPTION_HANDLER': 'drf_standardized_errors.handler.exception_handler',
@@ -103,7 +113,7 @@ SWAGGER_SETTINGS =  {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [ BASE_DIR / 'templates'],
+        'DIRS': [os.path.join(BASE_DIR, "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -115,3 +125,6 @@ TEMPLATES = [
         },
     },
 ]
+TEMPLATE_DIRS = (
+  os.path.join(BASE_DIR, "templates"),
+)

@@ -6,7 +6,7 @@ class Category(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, max_length=1000)
     active = models.BooleanField(default=False)
     url = models.CharField(max_length=1000, default="")
 
@@ -27,7 +27,7 @@ class Product(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, max_length=1000)
     active = models.BooleanField(default=False)
     url = models.CharField(max_length=1000, default="")
     category = models.ForeignKey(
@@ -49,8 +49,8 @@ class Article(models.Model):
 
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    name = models.CharField(max_length=1000)
+    description = models.TextField(blank=True, max_length=1000)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=10)
     stripe_price_id = models.CharField(max_length=1000, default="")
     stripe_product_id = models.CharField(max_length=1000,  default="")
@@ -134,7 +134,6 @@ class CartArticleManager(models.Manager):
         return Cart.objects.filter(pk=cart_id).first()
 
 
-
 class CartArticle(models.Model):
 
     article = models.ForeignKey(
@@ -147,3 +146,29 @@ class CartArticle(models.Model):
 
     def __repr__(self):
         return f'CartArticle(id={self.id}, article={self.article}, cart={self.cart}, quantity={self.quantity})'
+
+
+class Transaction(models.Model):
+
+    CREATED = 'CR'
+    FAILED = 'FL'
+    SUCCEED = 'SC'
+
+    STATUS = [
+        (CREATED, 'Created'),
+        (FAILED, 'Failed'),
+        (SUCCEED, 'Succeed')
+    ]
+
+    date = models.DateTimeField(auto_now=False, auto_now_add=False, blank=False, null=False)
+    status = models.CharField(
+        max_length=2,
+        choices=STATUS,
+        default=CREATED
+    )
+    amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    user = models.ForeignKey('authentication.User',
+                            on_delete=models.CASCADE, related_name="transactions")
+
+    def __repr__(self):
+        return f'Transaction(id={self.id}, date={self.date}, status={self.status}, amount={self.amount}, user={self.user})'

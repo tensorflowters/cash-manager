@@ -15,6 +15,8 @@ downprod:
 
 builddev:
 	@docker-compose -f docker-compose.dev.yml up -d --build
+	@docker-compose -f docker-compose.dev.yml exec api_dev python manage.py migrate
+	@docker-compose -f docker-compose.dev.yml exec -u postgres db_dev psql postgres postgres -f /docker-entrypoint-initdb.d/init.sql
 
 downdev:
 	@docker-compose -f docker-compose.dev.yml down -v

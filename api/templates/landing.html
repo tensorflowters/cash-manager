@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Buy cool new product</title>
+    <title>Buy new articles</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://polyfill.io/v3/polyfill.min.js?version=3.52.1&features=fetch"></script>
     <script src="https://js.stripe.com/v3/"></script>
@@ -10,18 +10,19 @@
 
 <body>
     <section>
+        <h3>Your cart</h3>
+        {% for art in cart.articles %}
         <div class="product">
+            <img src="{{ art.article.url }}" alt="{{ art.article.name }}" />
             <div class="description">
-                <h3>{{ article.name }}</h3>
-                <div>
-                    <h5>${{ article.get_price }}</h5>
-                    <form action="{% url 'stripe-session' %}" method="POST">
-                        {% csrf_token %}
-                        <button type="submit">Checkout</button>
-                    </form>
-                </div>
+                <h3>{{ art.article.name }}</h3>
+                <h5>${{ art.article.price }}</h5>
             </div>
         </div>
+        {% endfor %}
+        <form action="{{ CHECKOUT_SESSION_URL}}" method="GET">
+            <button type="submit">Checkout</button>
+        </form>
     </section>
 </body>
 

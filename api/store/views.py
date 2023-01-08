@@ -1,7 +1,7 @@
 import os
 import stripe
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
@@ -10,7 +10,6 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
 from authentication.permissions import IsAdminAuthenticated, IsStaffAuthenticated, IsUserAuthenticated
 from store.models import Category, Product, Article, Cart, CartArticle
@@ -146,10 +145,10 @@ class ArticleViewset(ModelViewSet):
 		return queryset
 
 
-@method_decorator(name="list", decorator=login_required(login_url='/api/login'))
-@method_decorator(name="add_article", decorator=login_required(login_url='/api/login'))
-@method_decorator(name="remove_article", decorator=login_required(login_url='/api/login'))
-@method_decorator(name="set_quantity_article", decorator=login_required(login_url='/api/login'))
+@method_decorator(name="list", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+@method_decorator(name="add_article", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+@method_decorator(name="remove_article", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+@method_decorator(name="set_quantity_article", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
 class CartViewset(mixins.ListModelMixin, GenericViewSet):
 
 	serializer_class = CartSerializer
@@ -401,47 +400,3 @@ class CartViewset(mixins.ListModelMixin, GenericViewSet):
 
 		else:
 			raise NotFound('No cart found. Please contact your administrator', code='not_found')
-
-
-class TestStripeView(APIView):
-
-	@swagger_auto_schema(tags=["Stripe"])
-	def post(self, request):
-		try:
-			test_payment_intent = stripe.PaymentIntent.create(
-				amount=1000, currency='pln',
-				payment_method_types=['card'],
-				receipt_email='test@example.com')
-			return Response(test_payment_intent)
-		except Exception as e:
-			return Response({"error": e.user_message})
-
-
-class StripeView(APIView):
-
-	@swagger_auto_schema(tags=["Stripe"])
-	def get(self, request):
-		config = {"stripe_pk": os.environ.get('STRIPE_SECRET_KEY')}
-		return Response(config)
-
-
-class StripeSessionView(APIView):
-
-	@swagger_auto_schema(tags=["Stripe"])
-	def post(self, request):
-		article = Article.objects.get(name='Test Product')
-		serializer_class = ArticleSerializer(article)
-		pay_data = {
-			"price": serializer_class.data['stripe_price_id'],
-			"quantity": 1,
-		}
-		checkout_session = stripe.checkout.Session.create(
-			success_url="http://0.0.0.0:8000/success",
-			cancel_url="http://0.0.0.0:8000/cancel",
-			payment_method_types=['card'],
-			mode='payment',
-			line_items=[
-				pay_data,
-			]
-		)
-		return redirect(checkout_session.url)

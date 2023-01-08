@@ -9,6 +9,11 @@ from authentication.views import LogoutViewset
 from authentication.views import RefreshView
 from authentication.views import AuthenticatedUserViewset
 from authentication.views import AdminUserViewset
+from bank_server.views import CheckoutSessionViewset
+from bank_server.views import CheckoutSuccessView
+from bank_server.views import CheckoutFailureView
+from bank_server.views import CheckoutLandingView
+from bank_server.views import OrderManagerView
 from store.views import ReadOnlyCategoryViewset
 from store.views import ReadOnlyProductViewset
 from store.views import ReadOnlyArticleViewset
@@ -16,9 +21,6 @@ from store.views import ProductViewset
 from store.views import CategoryViewset
 from store.views import ArticleViewset
 from store.views import CartViewset
-from store.views import StripeView
-from store.views import StripeSessionView
-from store.views import TestStripeView
 
 
 schema_view = get_schema_view(
@@ -45,6 +47,7 @@ router.register('api/products', ReadOnlyProductViewset, basename='products')
 router.register('api/articles', ReadOnlyArticleViewset, basename='articles')
 
 router.register('api/authenticated/cart', CartViewset, basename='authenticated-cart')
+router.register('api/authenticated/cart-checkout', CheckoutSessionViewset, basename='authenticated-cart-checkout')
 router.register('api/authenticated/users', AuthenticatedUserViewset, basename='authenticated-users')
 
 router.register('api/admin/categories', CategoryViewset, basename='admin-categories')
@@ -56,7 +59,8 @@ urlpatterns = [
    path('', include(router.urls)),
    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
    path('api/refresh', RefreshView.as_view(), name='token_refresh'),
-   path('stripe-pk/', StripeView.as_view(), name='stripe'),
-   path('stripe-session/', StripeSessionView.as_view(), name='stripe-session'),
-   path('test-stripe/', TestStripeView.as_view(), name='test-stripe'),
+   path('api/authenticated/cart-checkout/success', CheckoutSuccessView.as_view(), name='authenticated-cart-checkout-success'),
+   path('api/authenticated/cart-checkout/failure', CheckoutFailureView.as_view(), name='authenticated-cart-checkout-failure'),
+   path('api/authenticated/cart-checkout/landing', CheckoutLandingView.as_view(), name='authenticated-cart-checkout-landing'),
+   path('api/order-manager', OrderManagerView.as_view(), name='order-manager'),
 ]
