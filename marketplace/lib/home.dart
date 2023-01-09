@@ -1,5 +1,6 @@
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import "string_extension.dart";
@@ -38,7 +39,7 @@ class InitState extends State<Home> {
       String? accessToken = await storage.read(key: "accessToken");
 
       Response response = await get(
-        Uri.parse("http://127.0.0.1:8000/api/authenticated/users/" + "$userId"),
+        Uri.parse("${dotenv.env['PATH_HOST']!}/api/authenticated/users/" + "$userId"),
         headers: {
           "Content-type": "application/json",
           "Authorization": "Bearer " + "$accessToken"
@@ -87,7 +88,7 @@ class InitState extends State<Home> {
 
       if (Password == ConfirmPassword) {
         Response response = await patch(
-          Uri.parse("http://127.0.0.1:8000/api/authenticated/users/" + "$userId" + "/set_password"),
+          Uri.parse("${dotenv.env['PATH_HOST']!}/api/authenticated/users/" + "$userId" + "/set_password"),
           headers: {
             "Content-type": "application/json",
             "Authorization": "Bearer " + "$accessToken",

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:marketplace/string_extension.dart';
 import 'login_screen.dart';
@@ -51,7 +52,7 @@ class InitState extends State<SignUpScreen> {
     };
 
       final response =
-      await http.post(Uri.parse("http://127.0.0.1:8000/api/register"),
+      await http.post(Uri.parse("${dotenv.env['PATH_HOST']!}/api/register"),
         headers: {
           "Content-type": "application/json",
         },

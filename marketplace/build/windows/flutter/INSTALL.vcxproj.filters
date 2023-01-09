@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\mandre\OneDrive\epitech\Projet\Cash Manager (QR CODE)\T-DEV-700-PAR_11\marketplace\build\windows\CMakeFiles\ea0982c6a6729ad2dda9cbddc453832b\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{A55B67DC-E922-3E2D-AAE5-4C0D5FC06EAE}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
