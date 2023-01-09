@@ -136,7 +136,7 @@ class CheckoutSessionViewset(mixins.CreateModelMixin, GenericViewSet):
 				try:
 					# Create a PaymentIntent with the order amount and currency
 					amount = int(round(amount*100, 0))
-					intent = stripe.PaymentIntent.create(
+					paymentIntent = stripe.PaymentIntent.create(
 							amount=amount,
 							currency='usd',
 							automatic_payment_methods={
@@ -144,7 +144,20 @@ class CheckoutSessionViewset(mixins.CreateModelMixin, GenericViewSet):
 							},
 							customer=customer_id
 					)
-					return Response({ "clientSecret": intent['client_secret'] }, status=status.HTTP_200_OK)
+
+					ephemeralKey = stripe.EphemeralKey.create(
+						customer=customer['id'],
+						stripe_version='2022-11-15',
+					)
+					
+					return Response({ 
+						"paymentIntent": paymentIntent.client_secret,
+						"ephemeralKey": ephemeralKey.secret,
+						"customer": customer_id,
+						"publishableKey": settings.STRIPE_ACCESS_KEY,
+						}, 
+						status=status.HTTP_200_OK
+					)
 
 				except Exception as e:
 						raise ParseError({ 'message': e, 'error': 'Payment creation failed' }, code='validation_error')
