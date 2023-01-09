@@ -1,4 +1,4 @@
-from django.db import models, transaction, DatabaseError
+from django.db import models, transaction
 
 
 class Category(models.Model):
@@ -150,25 +150,24 @@ class CartArticle(models.Model):
 
 class Transaction(models.Model):
 
-    CREATED = 'CR'
+    AWAITING = 'AW'
     FAILED = 'FL'
-    SUCCEED = 'SC'
+    SUCCEEDED = 'SC'
 
     STATUS = [
-        (CREATED, 'Created'),
+        (AWAITING, 'Awaiting'),
         (FAILED, 'Failed'),
-        (SUCCEED, 'Succeed')
+        (SUCCEEDED, 'Succeeded')
     ]
 
-    date = models.DateTimeField(auto_now=False, auto_now_add=False, blank=False, null=False)
+    date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=2,
         choices=STATUS,
-        default=CREATED
+        default=AWAITING
     )
     amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    user = models.ForeignKey('authentication.User',
-                            on_delete=models.CASCADE, related_name="transactions")
+    payment_user_email = models.CharField(max_length=1000, default="Not provided")
 
     def __repr__(self):
         return f'Transaction(id={self.id}, date={self.date}, status={self.status}, amount={self.amount}, user={self.user})'
