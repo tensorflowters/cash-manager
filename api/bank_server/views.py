@@ -18,7 +18,7 @@ from store.serializers import CartSerializer, CartArticleSerializer
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-endpoint_secret = "whsec_2c30932916288ef6c8fd2ad4901a8510d1400efa3d92fd9a3916fe683bb766f4"
+endpoint_secret = "whsec_mBiM0dbNENeGsFxrWmPzuGdLDjCrsigQ"
 
 @method_decorator(name="get", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
 class CheckoutSuccessView(APIView):
@@ -56,7 +56,7 @@ class CheckoutLandingView(APIView):
 		return Response({'cart': serialized_cart, 'CHECKOUT_SESSION_URL': settings.CHECKOUT_SESSION_URL },status=status.HTTP_200_OK, template_name='landing.html')
 
 
-@method_decorator(name="list", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
+@method_decorator(name="create", decorator=login_required(login_url=f'{settings.API_BASE_URL}/api/login'))
 class CheckoutSessionViewset(mixins.CreateModelMixin, GenericViewSet):
 
 	serializer_class = CartSerializer
